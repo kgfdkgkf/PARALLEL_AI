@@ -1,0 +1,590 @@
+import React, { useMemo, useState } from 'react';
+import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Atmosphere } from '../components/Atmosphere';
+import { AiCover } from '../components/AiCover';
+import { Signet } from '../components/Avatar';
+import { CharacterPortrait, LocationArt } from '../components/Portraits';
+import { MapSheet, WorldMap } from '../components/WorldMap';
+import { MetricBars, MetricRadar, describeMetrics } from '../components/Metrics';
+import { Divider, Glass, Icon, IconButton, ModeBadge, Mono, Overline, Pill, PressableScale, PrimaryButton, Reveal, SectionLabel } from '../components';
+import { TOTAL_DECISIONS } from '../engine/events';
+import type { Location, Universe } from '../engine/types';
+import { accents, covers, fillImage, font, palette, radius, space } from '../theme';
+import type { ParallelStore } from '../state/useParallel';
+
+type TabKey = 'overview' | 'map' | 'people' | 'chronicle';
+
+const TABS: { id: TabKey; label: string; icon: 'compass' | 'map' | 'people' | 'timeline' }[] = [
+  { id: 'overview', label: 'Обзор', icon: 'compass' },
+  { id: 'map', label: 'Карта', icon: 'map' },
+  { id: 'people', label: 'Жители', icon: 'people' },
+  { id: 'chronicle', label: 'Хроника', icon: 'timeline' },
+];
+
+export function WorldScreen({ store }: { store: ParallelStore }) {
+  const [tab, setTab] = useState<TabKey>('overview');
+  const universe = store.active;
+  if (!universe) {
+    return (
+      <View style={{ flex: 1 }}>
+        <Atmosphere accent="violet" />
+        <SafeAreaView style={{ flex: 1, padding: 24, justifyContent: 'center', alignItems: 'center' }}>
+          <Text style={{ fontFamily: font.body, color: palette.muted }}>Вселенная ещё не создана.</Text>
+        </SafeAreaView>
+      </View>
+    );
+  }
+
+  const scheme = accents[universe.accent];
+  const insets = useSafeAreaInsets();
+  const { state } = universe;
+  const ending = state.ending;
+  const activeLocationId = store.selectedLocation?.id ?? null;
+
+  return (
+    <View style={{ flex: 1 }}>
+      <Atmosphere accent={universe.accent} intensity="soft" starCount={46} />
+      <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+        <View style={styles.topBar}>
+          <IconButton name="back" onPress={store.back} accent={universe.accent} size={36} />
+          <View style={{ flex: 1, alignItems: 'center' }}>
+            <Mono>{universe.codename} · {universe.era}</Mono>
+          </View>
+          <IconButton name="branch" onPress={() => store.go('branches')} accent={universe.accent} size={36} />
+        </View>
+
+        <ScrollView contentContainerStyle={{ paddingBottom: 128 }} showsVerticalScrollIndicator={false}>
+          <Reveal>
+            <View style={styles.hero}>
+              <Image source={covers[universe.cover]} resizeMode="cover" style={fillImage} />
+              <AiCover universe={universe} />
+              <LinearGradient
+                colors={['rgba(5,5,12,0.55)', 'rgba(5,5,12,0.45)', palette.ink]}
+                locations={[0, 0.55, 1]}
+                style={StyleSheet.absoluteFill}
+              />
+              <LinearGradient
+                colors={[scheme.tint[0], 'rgba(5,5,12,0)']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={StyleSheet.absoluteFill}
+              />
+              <View style={styles.heroBody}>
+                <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                  <Pill accent={universe.accent}>{universe.genre}</Pill>
+                  <ModeBadge mode={universe.mode} />
+                  <Mono>{universe.state.turn}/{TOTAL_DECISIONS} решений</Mono>
+                </View>
+                <Text style={styles.heroTitle}>{universe.title}</Text>
+                <Text style={styles.heroQuestion}>«{universe.question}»</Text>
+                <View style={styles.heroStats}>
+                  <View style={styles.heroStat}>
+                    <Text style={[styles.heroStatValue, { color: scheme.text }]}>{state.laws.length}</Text>
+                    <Mono>законов</Mono>
+                  </View>
+                  <View style={styles.heroStatDivider} />
+                  <View style={styles.heroStat}>
+                    <Text style={[styles.heroStatValue, { color: scheme.text }]}>{state.characters.length}</Text>
+                    <Mono>жителя</Mono>
+                  </View>
+                  <View style={styles.heroStatDivider} />
+                  <View style={styles.heroStat}>
+                    <Text style={[styles.heroStatValue, { color: scheme.text }]}>{state.locations.filter((item) => item.unlocked).length}</Text>
+                    <Mono>мест</Mono>
+                  </View>
+                  <View style={styles.heroStatDivider} />
+                  <View style={styles.heroStat}>
+                    <Text style={[styles.heroStatValue, { color: scheme.text }]}>{state.memory.length}</Text>
+                    <Mono>фактов</Mono>
+                  </View>
+                </View>
+              </View>
+            </View>
+          </Reveal>
+
+          <View style={styles.tabs}>
+            {TABS.map((item) => {
+              const active = tab === item.id;
+              return (
+                <View key={item.id} style={{ flex: 1 }}>
+                  <PressableScale onPress={() => setTab(item.id)}>
+                    <View style={styles.tab}>
+                      <Icon name={item.icon} size={17} color={active ? scheme.hi : palette.faint} strokeWidth={1.6} />
+                      <Text style={[styles.tabLabel, active && { color: palette.text }]}>{item.label}</Text>
+                      <View style={[styles.tabMark, { backgroundColor: active ? scheme.core : 'transparent' }]} />
+                    </View>
+                  </PressableScale>
+                </View>
+              );
+            })}
+          </View>
+
+          <View style={{ paddingHorizontal: 20, paddingTop: 18 }}>
+            {tab === 'overview' ? <Overview universe={universe} store={store} onOpenMap={() => setTab('map')} /> : null}
+            {tab === 'map' ? <MapTab universe={universe} store={store} /> : null}
+            {tab === 'people' ? <PeopleTab universe={universe} store={store} /> : null}
+            {tab === 'chronicle' ? <ChronicleTab universe={universe} /> : null}
+          </View>
+        </ScrollView>
+
+        <View style={[styles.actionBar, { paddingBottom: Math.max(insets.bottom, 14) }]}>
+          {ending ? (
+            <PrimaryButton title="СМОТРЕТЬ ФИНАЛ" icon="eye" accent={ending.accent} onPress={() => store.go('ending')} />
+          ) : (
+            <PrimaryButton
+              title={`ВМЕШАТЬСЯ В ИСТОРИЮ`}
+              icon="spark"
+              accent={universe.accent}
+              onPress={() => store.go('decision')}
+            />
+          )}
+        </View>
+      </SafeAreaView>
+    </View>
+  );
+}
+
+function Overview({ universe, store, onOpenMap }: { universe: Universe; store: ParallelStore; onOpenMap: () => void }) {
+  const scheme = accents[universe.accent];
+  const { state } = universe;
+  return (
+    <View style={{ gap: space.xl }}>
+      <View>
+        <SectionLabel accent={universe.accent}>правило мира</SectionLabel>
+        <View style={[styles.ruleCard, { borderColor: scheme.core + '33' }]}>
+          <Text style={[styles.ruleMark, { color: scheme.core }]}>§</Text>
+          <Text style={styles.ruleText}>{universe.rule}</Text>
+        </View>
+        <Text style={styles.premise}>{universe.premise}</Text>
+        {universe.signature ? (
+          <View style={[styles.signatureCard, { borderColor: scheme.core + '40' }]}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <Icon name="spark" size={13} color={scheme.hi} />
+              <Overline color={scheme.text}>уникальное в этой вселенной</Overline>
+            </View>
+            <Text style={styles.signatureTitle}>{universe.signature.title}</Text>
+            <Text style={styles.signatureText}>{universe.signature.text}</Text>
+          </View>
+        ) : null}
+        <View style={styles.roleRow}>
+          <View style={{ flex: 1 }}>
+            <Overline color={palette.violetHi}>ваша роль</Overline>
+            <Text style={styles.roleText}>{universe.playerRole ?? 'Странник из мира без правил'}</Text>
+          </View>
+          <View style={{ flex: 1 }}>
+            <Overline color={palette.gold}>цель партии</Overline>
+            <Text style={styles.roleText}>{universe.objective?.title ?? 'Дойти до финала'}</Text>
+            <Text style={styles.roleHint}>{universe.objective?.description ?? ''}</Text>
+          </View>
+        </View>
+      </View>
+
+      <View>
+        <SectionLabel accent="cyan">состояние цивилизации</SectionLabel>
+        <Glass>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+            <MetricRadar metrics={state.metrics} accent={universe.accent} size={152} />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.metricsLine}>{describeMetrics(state.metrics)}</Text>
+              <View style={{ marginTop: 10 }}>
+                <Mono>меняется решениями</Mono>
+              </View>
+            </View>
+          </View>
+          <Divider style={{ marginVertical: 16 }} />
+          <MetricBars metrics={state.metrics} accent={universe.accent} compact />
+        </Glass>
+      </View>
+
+      <View>
+        <SectionLabel accent="rose">сводка мира</SectionLabel>
+        {state.news.length ? (
+          <View style={{ gap: 10 }}>
+            {state.news.slice(0, 3).map((item) => (
+              <View key={item.id} style={styles.newsRow}>
+                <View style={styles.newsHead}>
+                  <View
+                    style={[
+                      styles.newsDot,
+                      {
+                        backgroundColor:
+                          item.tone === 'negative' ? palette.rose : item.tone === 'positive' ? palette.green : palette.faint,
+                      },
+                    ]}
+                  />
+                  <Mono>{item.source}</Mono>
+                  <Mono>· после решения {item.turn}</Mono>
+                </View>
+                <Text style={styles.newsTitle}>{item.headline}</Text>
+                <Text style={styles.newsText}>{item.text}</Text>
+              </View>
+            ))}
+          </View>
+        ) : (
+          <View style={styles.newsEmpty}>
+            <Icon name="timeline" size={14} color={palette.faint} />
+            <Text style={styles.newsEmptyText}>
+              Сводка появится после первого решения: этот мир начнёт публиковать новости о себе.
+            </Text>
+          </View>
+        )}
+      </View>
+
+      <View>
+        <SectionLabel accent="gold">законы реальности</SectionLabel>
+        <View style={{ gap: 8 }}>
+          {state.laws.map((law, index) => (
+            <View key={law.id} style={styles.lawRow}>
+              <Text style={[styles.lawIndex, { color: law.origin === 'consequence' ? scheme.text : palette.faint }]}>
+                {String(index + 1).padStart(2, '0')}
+              </Text>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.lawText}>{law.text}</Text>
+                {law.origin === 'consequence' ? (
+                  <View style={{ marginTop: 6 }}>
+                    <Pill accent={universe.accent}>следствие решения</Pill>
+                  </View>
+                ) : null}
+              </View>
+            </View>
+          ))}
+        </View>
+      </View>
+
+      <View>
+        <SectionLabel accent="violet">культура и быт</SectionLabel>
+        <View style={styles.cultureGrid}>
+          {universe.culture.map((fact, index) => (
+            <View key={`${fact.label}-${index}`} style={styles.cultureCell}>
+              <Overline color={palette.violetHi}>{fact.label}</Overline>
+              <Text style={styles.cultureValue}>{fact.value}</Text>
+            </View>
+          ))}
+        </View>
+      </View>
+
+      <View>
+        <SectionLabel accent="green">что помнит этот мир</SectionLabel>
+        <View style={styles.memoryList}>
+          {state.memory.slice(-7).map((fact) => (
+            <View key={fact.id} style={styles.memoryRow}>
+              <View style={[styles.memoryDot, { backgroundColor: fact.kind === 'decision' ? scheme.core : palette.faint }]} />
+              <Text style={styles.memoryText}>{fact.text}</Text>
+            </View>
+          ))}
+        </View>
+        <Text style={styles.memoryHint}>
+          Память мира нельзя стереть: она влияет на события, диалоги и финал. Сравнить ветви можно в разделе «Ветви».
+        </Text>
+      </View>
+
+      <View>
+        <SectionLabel accent="cyan" action="На карту" onAction={onOpenMap}>
+          места
+        </SectionLabel>
+        <View style={{ gap: 8 }}>
+          {state.locations.slice(0, 3).map((location) => (
+            <View key={location.id} style={styles.placeRow}>
+              <LocationArt name={location.name} accent={location.accent} width={54} height={40} />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.placeName}>{location.name}</Text>
+                <Text style={styles.placeBlurb}>{location.blurb}</Text>
+              </View>
+              <Mono>{location.kind}</Mono>
+            </View>
+          ))}
+        </View>
+      </View>
+    </View>
+  );
+}
+
+function MapTab({ universe, store }: { universe: Universe; store: ParallelStore }) {
+  const location = store.selectedLocation ?? universe.state.locations[0];
+  const resident = location ? universe.state.characters.find((item) => item.home === location.id) : undefined;
+  const scene = store.scene && store.scene.locationId === location?.id ? store.scene : null;
+  return (
+    <View style={{ gap: 16 }}>
+      <SectionLabel accent={universe.accent}>карта реальности</SectionLabel>
+      <WorldMap
+        locations={universe.state.locations}
+        accent={universe.accent}
+        heightRatio={0.86}
+        activeId={location?.id ?? null}
+        onSelect={(item: Location) => store.setSelectedLocationId(item.id)}
+      />
+      <Text style={styles.mapHint}>
+        Нажми на узел, чтобы открыть место. Новые точки появляются по мере того, как мир меняется под твоими решениями.
+      </Text>
+      {scene ? (
+        <View style={[styles.sceneCard, { borderColor: accents[scene.accent].core + '55' }]}>
+          <Overline color={accents[scene.accent].text}>{scene.locationName}</Overline>
+          <Text style={styles.sceneTitle}>{scene.title}</Text>
+          <Text style={styles.sceneText}>{scene.text}</Text>
+          <View style={styles.sceneFoot}>
+            <Pill accent={scene.accent}>{scene.effectLabel}</Pill>
+            <PressableScale onPress={store.clearScene}>
+              <Text style={styles.sceneClose}>Понятно</Text>
+            </PressableScale>
+          </View>
+        </View>
+      ) : null}
+      {location ? (
+        <MapSheet
+          location={location}
+          accent={location.accent}
+          characterName={resident?.name}
+          onOpenCharacter={resident ? () => store.openCharacter(resident.id) : undefined}
+          onExplore={() => store.explore(location.id)}
+          explored={location.visitedTurn === universe.state.turn}
+        />
+      ) : null}
+    </View>
+  );
+}
+
+function PeopleTab({ universe, store }: { universe: Universe; store: ParallelStore }) {
+  return (
+    <View style={{ gap: 14 }}>
+      <SectionLabel accent="violet">жители вселенной</SectionLabel>
+      {universe.state.characters.map((character) => {
+        const scheme = accents[character.accent];
+        return (
+          <PressableScale key={character.id} onPress={() => store.openCharacter(character.id)}>
+            <View style={[styles.personCard, { borderColor: scheme.core + '2A' }]}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+                <CharacterPortrait name={character.name} accent={character.accent} stance={character.stance} width={62} height={80} />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.personName}>{character.name}</Text>
+                  <Overline color={scheme.text} style={{ marginTop: 3 }}>{character.role}</Overline>
+                </View>
+                <Icon name="chevron" size={16} color={palette.faint} />
+              </View>
+              <Text style={styles.personQuote}>«{character.quote}»</Text>
+              <View style={styles.personFoot}>
+                <View style={{ flex: 1 }}>
+                  <View style={styles.bondTrack}>
+                    <View style={[styles.bondFill, { width: `${character.bond}%`, backgroundColor: scheme.core }]} />
+                  </View>
+                </View>
+                <Mono>{character.status} · {character.bond}%</Mono>
+              </View>
+            </View>
+          </PressableScale>
+        );
+      })}
+      <Text style={styles.mapHint}>
+        Жители помнят твои решения. Чем выше доверие, тем больше они рассказывают — включая то, что предпочли бы скрыть.
+      </Text>
+    </View>
+  );
+}
+
+function ChronicleTab({ universe }: { universe: Universe }) {
+  const entries = [...universe.state.chronicle].reverse();
+  return (
+    <View>
+      <SectionLabel accent="gold">хроника вселенной</SectionLabel>
+      <View style={styles.timeline}>
+        <View style={styles.timelineLine} />
+        {entries.map((entry, index) => {
+          const scheme = accents[entry.accent];
+          const emphasis = entry.kind === 'decision' || entry.kind === 'ending';
+          return (
+            <View key={entry.id} style={styles.timelineItem}>
+              <View style={styles.timelineRail}>
+                <View
+                  style={[
+                    styles.timelineDot,
+                    {
+                      borderColor: scheme.core,
+                      backgroundColor: emphasis ? scheme.core : palette.ink,
+                    },
+                  ]}
+                />
+                {index < entries.length - 1 ? null : <View style={styles.timelineCap} />}
+              </View>
+              <View style={[styles.timelineBody, emphasis && { borderColor: scheme.core + '3A' }]}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+                  <Overline color={scheme.text}>{entry.label}</Overline>
+                  <Mono>{entry.year}</Mono>
+                </View>
+                <Text style={styles.timelineTitle}>{entry.title}</Text>
+                <Text style={styles.timelineText}>{entry.text}</Text>
+              </View>
+            </View>
+          );
+        })}
+      </View>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  newsRow: {
+    padding: 13,
+    borderRadius: radius.md,
+    backgroundColor: 'rgba(255,255,255,0.028)',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: palette.lineSoft,
+    gap: 6,
+  },
+  newsHead: { flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' },
+  newsDot: { width: 5, height: 5, borderRadius: 5 },
+  newsTitle: { fontFamily: font.bodySemi, fontSize: 13.5, lineHeight: 20, color: palette.text },
+  newsText: { fontFamily: font.body, fontSize: 12.5, lineHeight: 19, color: palette.muted },
+  newsEmpty: {
+    flexDirection: 'row',
+    gap: 10,
+    alignItems: 'flex-start',
+    padding: 14,
+    borderRadius: radius.md,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: palette.lineSoft,
+  },
+  newsEmptyText: { flex: 1, fontFamily: font.body, fontSize: 12.5, lineHeight: 19, color: palette.faint },
+
+  topBar: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingBottom: 8, gap: 10 },
+  hero: { height: 322, marginHorizontal: 20, marginTop: 2, borderRadius: radius.lg, overflow: 'hidden', justifyContent: 'flex-end' },
+  heroBody: { padding: 18, gap: 8 },
+  heroTitle: { fontFamily: font.display, fontSize: 25, lineHeight: 32, letterSpacing: -0.6, color: palette.text },
+  heroQuestion: { fontFamily: font.body, fontSize: 13, lineHeight: 19, color: palette.textSoft, fontStyle: 'italic' },
+  heroStats: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 10 },
+  heroStat: { gap: 2 },
+  heroStatValue: { fontFamily: font.displayBook, fontSize: 15, lineHeight: 21 },
+  heroStatDivider: { width: StyleSheet.hairlineWidth, height: 18, backgroundColor: palette.line },
+  tabs: {
+    flexDirection: 'row',
+    marginTop: 18,
+    marginHorizontal: 20,
+    borderRadius: radius.md,
+    backgroundColor: 'rgba(255,255,255,0.035)',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: palette.lineSoft,
+    paddingVertical: 4,
+  },
+  tab: { alignItems: 'center', gap: 4, paddingVertical: 8 },
+  tabLabel: { fontFamily: font.bodySemi, fontSize: 11.5, letterSpacing: 0.5, color: palette.faint },
+  tabMark: { width: 14, height: 2, borderRadius: 2, marginTop: 2 },
+  ruleCard: {
+    flexDirection: 'row',
+    gap: 10,
+    padding: 16,
+    borderRadius: radius.md,
+    borderWidth: StyleSheet.hairlineWidth,
+    backgroundColor: 'rgba(20,16,40,0.66)',
+  },
+  ruleMark: { fontFamily: font.display, fontSize: 22, lineHeight: 26 },
+  ruleText: { flex: 1, fontFamily: font.bodySemi, fontSize: 15, lineHeight: 23, color: palette.text },
+  premise: { fontFamily: font.body, fontSize: 14.5, lineHeight: 22, color: palette.muted, marginTop: 14 },
+  signatureCard: {
+    marginTop: 16,
+    padding: 16,
+    borderRadius: radius.md,
+    borderWidth: StyleSheet.hairlineWidth,
+    backgroundColor: 'rgba(20,16,40,0.66)',
+    gap: 6,
+  },
+  signatureTitle: { fontFamily: font.displayBook, fontSize: 16, lineHeight: 22, color: palette.text },
+  signatureText: { fontFamily: font.body, fontSize: 12.5, lineHeight: 19, color: palette.textSoft },
+  roleRow: { flexDirection: 'row', gap: 14, marginTop: 16 },
+  roleText: { fontFamily: font.bodySemi, fontSize: 13.5, lineHeight: 20, color: palette.text, marginTop: 4 },
+  roleHint: { fontFamily: font.body, fontSize: 11.5, lineHeight: 17, color: palette.faint, marginTop: 4 },
+  sceneCard: {
+    padding: 16,
+    borderRadius: radius.lg,
+    borderWidth: StyleSheet.hairlineWidth,
+    backgroundColor: 'rgba(20,16,40,0.72)',
+    gap: 8,
+  },
+  sceneTitle: { fontFamily: font.displayBook, fontSize: 16, lineHeight: 23, color: palette.text },
+  sceneText: { fontFamily: font.body, fontSize: 13, lineHeight: 21, color: palette.textSoft },
+  sceneFoot: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 6 },
+  sceneClose: { fontFamily: font.bodySemi, fontSize: 11.5, color: palette.textSoft },
+  metricsLine: { fontFamily: font.bodySemi, fontSize: 13.5, lineHeight: 20, color: palette.textSoft },
+  lawRow: {
+    flexDirection: 'row',
+    gap: 12,
+    padding: 14,
+    borderRadius: radius.md,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: palette.lineSoft,
+  },
+  lawIndex: { fontFamily: font.mono, fontSize: 12, letterSpacing: 1, marginTop: 2 },
+  lawText: { fontFamily: font.body, fontSize: 13.5, lineHeight: 20, color: palette.textSoft },
+  cultureGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  cultureCell: {
+    width: '47.6%',
+    minHeight: 96,
+    padding: 12,
+    borderRadius: radius.md,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: palette.lineSoft,
+    gap: 6,
+  },
+  cultureValue: { fontFamily: font.body, fontSize: 12.5, lineHeight: 17, color: palette.muted },
+  memoryList: { gap: 8 },
+  memoryRow: { flexDirection: 'row', gap: 10, alignItems: 'flex-start' },
+  memoryDot: { width: 5, height: 5, borderRadius: 5, marginTop: 7 },
+  memoryText: { flex: 1, fontFamily: font.body, fontSize: 13, lineHeight: 19, color: palette.textSoft },
+  memoryHint: { fontFamily: font.body, fontSize: 12, lineHeight: 17, color: palette.faint, marginTop: 12 },
+  placeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    padding: 13,
+    borderRadius: radius.md,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: palette.lineSoft,
+  },
+  placeDot: { width: 7, height: 7, borderRadius: 7 },
+  placeName: { fontFamily: font.bodySemi, fontSize: 13, color: palette.text },
+  placeBlurb: { fontFamily: font.body, fontSize: 12.5, lineHeight: 16, color: palette.muted, marginTop: 2 },
+  mapHint: { fontFamily: font.body, fontSize: 12.5, lineHeight: 18, color: palette.faint },
+  personCard: {
+    padding: 16,
+    borderRadius: radius.lg,
+    backgroundColor: 'rgba(18,15,36,0.62)',
+    borderWidth: StyleSheet.hairlineWidth,
+    gap: 12,
+  },
+  personName: { fontFamily: font.displayBook, fontSize: 15.5, lineHeight: 22, color: palette.text },
+  personQuote: { fontFamily: font.body, fontSize: 13, lineHeight: 19, color: palette.textSoft, fontStyle: 'italic' },
+  personFoot: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  bondTrack: { height: 2, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.08)' },
+  bondFill: { height: 2, borderRadius: 2 },
+  timeline: { paddingLeft: 4 },
+  timelineLine: { position: 'absolute', left: 9, top: 6, bottom: 6, width: StyleSheet.hairlineWidth, backgroundColor: palette.line },
+  timelineItem: { flexDirection: 'row', gap: 14, marginBottom: 14 },
+  timelineRail: { width: 18, alignItems: 'center', paddingTop: 6 },
+  timelineDot: { width: 11, height: 11, borderRadius: 11, borderWidth: 1.4 },
+  timelineCap: { width: 1, height: 0 },
+  timelineBody: {
+    flex: 1,
+    padding: 13,
+    borderRadius: radius.md,
+    backgroundColor: 'rgba(255,255,255,0.028)',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: palette.lineSoft,
+    gap: 6,
+  },
+  timelineTitle: { fontFamily: font.bodySemi, fontSize: 13.5, color: palette.text },
+  timelineText: { fontFamily: font.body, fontSize: 12.5, lineHeight: 18, color: palette.muted },
+  actionBar: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 30,
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    backgroundColor: '#07060F',
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: palette.lineSoft,
+  },
+});
