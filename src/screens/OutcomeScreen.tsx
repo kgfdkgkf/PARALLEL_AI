@@ -141,6 +141,21 @@ export function OutcomeScreen({ store }: { store: ParallelStore }) {
               </View>
             </Reveal>
 
+            <Reveal delay={380} style={{ marginTop: space.lg }}>
+              <SectionLabel accent="violet">другие ветви</SectionLabel>
+              <View style={{ gap: 8 }}>
+                {(outcome.node.snapshot.pending?.options ?? [])
+                  .filter((option) => option.id !== outcome.option.id)
+                  .map((option) => (
+                    <View key={option.id} style={styles.otherBranch}>
+                      <Text style={styles.otherTitle}>{option.title}</Text>
+                      <Text style={styles.otherHeadline}>→ {option.headline}</Text>
+                    </View>
+                  ))}
+              </View>
+              <Text style={styles.otherHint}>Любую из них можно прожить: «Ветви» → вернуться к точке выбора.</Text>
+            </Reveal>
+
             {outcome.option.law ? (
               <Reveal delay={360} style={{ marginTop: space.lg }}>
                 <View style={[styles.lawCard, { borderColor: scheme.core + '44' }]}>
@@ -237,6 +252,17 @@ export function OutcomeScreen({ store }: { store: ParallelStore }) {
 }
 
 const styles = StyleSheet.create({
+  otherBranch: {
+    padding: 12,
+    borderRadius: radius.md,
+    backgroundColor: 'rgba(255,255,255,0.025)',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: palette.lineSoft,
+    gap: 4,
+  },
+  otherTitle: { fontFamily: font.bodySemi, fontSize: 12.5, color: palette.text },
+  otherHeadline: { fontFamily: font.body, fontSize: 11.5, lineHeight: 17, color: palette.muted },
+  otherHint: { fontFamily: font.body, fontSize: 11, lineHeight: 17, color: palette.faint, marginTop: 10 },
   newsRow: {
     padding: 12,
     borderRadius: radius.md,
