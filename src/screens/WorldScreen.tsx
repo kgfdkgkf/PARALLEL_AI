@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Image, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as Speech from 'expo-speech';
 import { Atmosphere } from '../components/Atmosphere';
 import { AiCover } from '../components/AiCover';
 import { Signet } from '../components/Avatar';
@@ -175,6 +176,20 @@ function Overview({ universe, store, onOpenMap }: { universe: Universe; store: P
           <Text style={styles.ruleText}>{universe.rule}</Text>
         </View>
         <Text style={styles.premise}>{universe.premise}</Text>
+        <PressableScale
+          onPress={() => {
+            try {
+              Speech.stop();
+              Speech.speak(universe.title + '. ' + universe.premise, { language: 'ru-RU', rate: 0.95, pitch: 0.9 });
+            } catch {}
+          }}
+        >
+          <View style={styles.listenRow}>
+            <Icon name="sound" size={14} color={scheme.hi} />
+            <Text style={[styles.listenText, { color: scheme.text }]}>Слушать мир</Text>
+            <Mono>голосом системы</Mono>
+          </View>
+        </PressableScale>
         {universe.signature ? (
           <View style={[styles.signatureCard, { borderColor: scheme.core + '40' }]}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
@@ -496,6 +511,19 @@ const styles = StyleSheet.create({
   ruleMark: { fontFamily: font.display, fontSize: 22, lineHeight: 26 },
   ruleText: { flex: 1, fontFamily: font.bodySemi, fontSize: 15, lineHeight: 23, color: palette.text },
   premise: { fontFamily: font.body, fontSize: 14.5, lineHeight: 22, color: palette.muted, marginTop: 14 },
+  listenRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 14,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: radius.pill,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: palette.line,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+  },
+  listenText: { flex: 1, fontFamily: font.bodySemi, fontSize: 12.5 },
   signatureCard: {
     marginTop: 16,
     padding: 16,
