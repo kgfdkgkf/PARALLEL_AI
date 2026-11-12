@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Atmosphere } from '../components/Atmosphere';
@@ -52,7 +52,24 @@ export function WorldScreen({ store }: { store: ParallelStore }) {
           <View style={{ flex: 1, alignItems: 'center' }}>
             <Mono>{universe.codename} · {universe.era}</Mono>
           </View>
-          <IconButton name="branch" onPress={() => store.go('branches')} accent={universe.accent} size={36} />
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            <IconButton
+              name="send"
+              label="share"
+              onPress={() => {
+                Share.share({
+                  message:
+                    '«' + universe.title + '» — вселенная в ПАРАЛЛЕЛЬ.\n' +
+                    'Гипотеза: ' + universe.question + '\n' +
+                    'Правило: ' + universe.rule + '\n' +
+                    'Решений: ' + universe.state.turn + '/6, жителей: ' + universe.state.characters.length + '.',
+                }).catch(() => undefined);
+              }}
+              accent={universe.accent}
+              size={36}
+            />
+            <IconButton name="branch" onPress={() => store.go('branches')} accent={universe.accent} size={36} />
+          </View>
         </View>
 
         <ScrollView contentContainerStyle={{ paddingBottom: 128 }} showsVerticalScrollIndicator={false}>

@@ -1,5 +1,6 @@
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Easing, Image, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Atmosphere } from '../components/Atmosphere';
@@ -11,6 +12,19 @@ import { GhostButton, ModeBadge, Mono, Overline, Pill, PressableScale, PrimaryBu
 import { createUniverse } from '../engine/generate';
 import { accents, covers, fillImage, font, palette, radius, space } from '../theme';
 import type { ParallelStore } from '../state/useParallel';
+
+const DAILY_KEY = 'parallel.daily.v1';
+
+function todayKey(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function dailyPromptIndex(total: number): number {
+  const key = todayKey();
+  let hash = 0;
+  for (let index = 0; index < key.length; index += 1) hash = (hash * 31 + key.charCodeAt(index)) % 9973;
+  return hash % total;
+}
 
 const PROMPTS = [
   'Что, если бы время можно было покупать?',
@@ -41,6 +55,34 @@ export function HomeScreen({ store }: { store: ParallelStore }) {
 
   const scheme = accents.violet;
   const lastWorld = store.archive[0];
+  const daily = PROMPTS[dailyPromptIndex(PROMPTS.length)];
+  const [streak, setStreak] = useState(1);
+
+  useEffect(() => {
+    let cancelled = false;
+    AsyncStorage.getItem(DAILY_KEY)
+      .then((raw) => {
+        if (cancelled) return;
+        const today = todayKey();
+        const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+        let count = 1;
+        if (raw) {
+          try {
+            const saved = JSON.parse(raw) as { date?: string; count?: number };
+            if (saved.date === today) count = saved.count ?? 1;
+            else if (saved.date === yesterday) count = (saved.count ?? 0) + 1;
+          } catch {
+            count = 1;
+          }
+        }
+        setStreak(count);
+        AsyncStorage.setItem(DAILY_KEY, JSON.stringify({ date: today, count })).catch(() => undefined);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <View style={{ flex: 1 }}>
@@ -136,6 +178,31 @@ export function HomeScreen({ store }: { store: ParallelStore }) {
                 </PressableScale>
               </Reveal>
             ) : null}
+
+            <Reveal delay={430} style={{ marginTop: space.xl }}>
+              <SectionLabel accent="gold">гипотеза дня</SectionLabel>
+              <PressableScale
+                onPress={() => {
+                  store.setDraftQuestion(daily);
+                  store.go('create');
+                }}
+              >
+                <View style={styles.dailyCard}>
+                  <View style={styles.dailyTop}>
+                    <Mono>{new Date().toLocaleDateString('ru-RU', { day: '2-digit', month: 'long' })}</Mono>
+                    <View style={styles.dailyStreak}>
+                      <Icon name="clock" size={12} color={palette.gold} />
+                      <Mono color={palette.gold}>серия {streak} {streak === 1 ? 'день' : streak < 5 ? 'дня' : 'дней'}</Mono>
+                    </View>
+                  </View>
+                  <Text style={styles.dailyText}>{daily}</Text>
+                  <View style={styles.dailyFoot}>
+                    <Mono>одна гипотеза в день</Mono>
+                    <Text style={styles.dailyAction}>Открыть мир</Text>
+                  </View>
+                </View>
+              </PressableScale>
+            </Reveal>
 
             <Reveal delay={460} style={{ marginTop: space.xl }}>
               <SectionLabel accent="violet">мир недели</SectionLabel>
@@ -244,6 +311,19 @@ const styles = StyleSheet.create({
   heroFlowIndex: { fontFamily: font.mono, fontSize: 10, letterSpacing: 1, color: palette.violetHi },
   heroFlowLabel: { fontFamily: font.bodySemi, fontSize: 11.5, letterSpacing: 0.6, color: palette.textSoft },
   heroFlowLine: { flex: 1, height: StyleSheet.hairlineWidth, backgroundColor: palette.lineStrong, minWidth: 14 },
+  dailyCard: {
+    padding: 16,
+    borderRadius: radius.lg,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(255,201,139,0.34)',
+    backgroundColor: 'rgba(50,34,14,0.35)',
+    gap: 10,
+  },
+  dailyTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  dailyStreak: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  dailyText: { fontFamily: font.bodySemi, fontSize: 15, lineHeight: 23, color: palette.text },
+  dailyFoot: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 2 },
+  dailyAction: { fontFamily: font.bodySemi, fontSize: 11.5, letterSpacing: 0.4, color: palette.gold },
   quickRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 14 },
   dotDivider: { width: 3, height: 3, borderRadius: 3, backgroundColor: palette.faint, opacity: 0.7 },
   continueCard: {
