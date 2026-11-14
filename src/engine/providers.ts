@@ -124,6 +124,15 @@ export const DEFAULT_SETTINGS: AiSettings = {
   model: ENV_MODEL,
 };
 
+/** Готовые модели на выбор: одна кнопка вместо ввода имени. */
+export const MODEL_PRESETS: Partial<Record<ProviderId, { label: string; model: string }[]>> = {
+  groq: [
+    { label: 'gpt-oss-120b', model: 'openai/gpt-oss-120b' },
+    { label: 'gpt-oss-20b', model: 'openai/gpt-oss-20b' },
+  ],
+  openrouter: [{ label: 'deepseek v3 :free', model: 'deepseek/deepseek-chat-v3-0324:free' }],
+};
+
 export function providerOf(settings: AiSettings): ProviderConfig {
   return PROVIDERS[settings.provider] ?? PROVIDERS.demo;
 }

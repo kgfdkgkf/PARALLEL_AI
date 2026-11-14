@@ -5,7 +5,7 @@ import { Atmosphere } from '../components/Atmosphere';
 import { BottomNav } from '../components/BottomNav';
 import { Signet } from '../components/Avatar';
 import { Divider, GhostButton, Icon, Mono, Overline, Pill, PressableScale, Reveal, SectionLabel } from '../components';
-import { PROVIDERS, embeddedKey, type ProviderId } from '../engine/providers';
+import { MODEL_PRESETS, PROVIDERS, embeddedKey, type ProviderId } from '../engine/providers';
 import { accents, font, palette, radius } from '../theme';
 import type { ParallelStore } from '../state/useParallel';
 
@@ -14,6 +14,7 @@ export function ProfileScreen({ store }: { store: ParallelStore }) {
   const [checkMessage, setCheckMessage] = useState<string | null>(null);
   const provider = PROVIDERS[store.aiSettings.provider];
   const providerOrder: ProviderId[] = ['demo', 'gemini', 'groq', 'openrouter', 'deepseek', 'local', 'backend'];
+  const presets = MODEL_PRESETS[store.aiSettings.provider] ?? [];
   const endingBadges = [
     { kind: 'order', title: 'Хрустальный порядок', accent: 'gold' as const },
     { kind: 'freedom', title: 'Дикий рассвет', accent: 'green' as const },
@@ -176,6 +177,26 @@ export function ProfileScreen({ store }: { store: ParallelStore }) {
                       Ключ сохранён на этом устройстве: ····{store.aiSettings.key.trim().slice(-4)}
                     </Text>
                   ) : null}
+                  {presets.length > 0 ? (
+                    <View style={styles.presetRow}>
+                      {presets.map((preset) => {
+                        const active = (store.aiSettings.model || provider.model) === preset.model;
+                        return (
+                          <PressableScale
+                            key={preset.model}
+                            onPress={() => {
+                              setCheckMessage(null);
+                              store.updateAiSettings({ model: preset.model });
+                            }}
+                          >
+                            <View style={[styles.presetChip, active && styles.providerChipActive]}>
+                              <Text style={[styles.presetText, active && { color: palette.text }]}>{preset.label}</Text>
+                            </View>
+                          </PressableScale>
+                        );
+                      })}
+                    </View>
+                  ) : null}
                   <Text style={styles.aiLabel}>МОДЕЛЬ</Text>
                   <TextInput
                     value={store.aiSettings.model}
@@ -333,6 +354,16 @@ const styles = StyleSheet.create({
   aiTitle: { fontFamily: font.bodyBold, fontSize: 13, letterSpacing: 1.2, color: palette.text, textTransform: 'uppercase' },
   aiText: { fontFamily: font.body, fontSize: 13, lineHeight: 22, color: palette.muted },
   providerRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 },
+  presetRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  presetChip: {
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    borderRadius: radius.pill,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: palette.lineSoft,
+    backgroundColor: 'rgba(255,255,255,0.02)',
+  },
+  presetText: { fontFamily: font.mono, fontSize: 10, color: palette.muted },
   providerChip: {
     paddingHorizontal: 12,
     paddingVertical: 8,
