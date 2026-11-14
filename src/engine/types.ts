@@ -137,7 +137,21 @@ export type Ending = {
   accent: AccentKey;
 };
 
+export type DivineEvent = {
+  id: string;
+  turn: number;
+  kind: 'omen' | 'prayer' | 'crisis' | 'miracle';
+  title: string;
+  text: string;
+  characterId?: string;
+  characterName?: string;
+  resolved?: 'bless' | 'curse';
+  result?: string;
+};
+
 export type WorldState = {
+  faith?: number;
+  divine?: DivineEvent[];
   metrics: Metrics;
   laws: Law[];
   locations: Location[];
@@ -184,6 +198,7 @@ export type Universe = {
   mode: EngineMode;
   /** кем видит игрока этот мир */
   playerRole?: string;
+  deity?: string;
   signature?: Signature;
   objective?: Objective;
   state: WorldState;

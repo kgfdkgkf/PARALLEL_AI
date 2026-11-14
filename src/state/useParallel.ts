@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createUniverse } from '../engine/generate';
 import { applyOption, buildDecision, rewindUniverse } from '../engine/events';
 import { exploreLocation, type Scene } from '../engine/explore';
+import { bless, curse } from '../engine/divine';
 import { greetingFor, replyToCharacter, suggestedQuestions } from '../engine/chat';
 import {
   AiError,
@@ -331,6 +332,20 @@ export function useParallel() {
 
   const clearScene = useCallback(() => setScene(null), []);
 
+  const blessDivine = useCallback(() => {
+    const universe = activeRef.current;
+    if (!universe) return;
+    const next = bless(universe);
+    if (next) commit(next);
+  }, [commit]);
+
+  const curseDivine = useCallback(() => {
+    const universe = activeRef.current;
+    if (!universe) return;
+    const next = curse(universe);
+    if (next) commit(next);
+  }, [commit]);
+
   const rewind = useCallback(
     (nodeId: string) => {
       const universe = activeRef.current;
@@ -515,6 +530,8 @@ export function useParallel() {
     scene,
     explore,
     clearScene,
+    blessDivine,
+    curseDivine,
     openCharacter,
     sendMessage,
     deleteWorld,

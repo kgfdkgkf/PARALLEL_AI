@@ -11,16 +11,27 @@ import { MapSheet, WorldMap } from '../components/WorldMap';
 import { MetricBars, MetricRadar, describeMetrics } from '../components/Metrics';
 import { Divider, Glass, Icon, IconButton, ModeBadge, Mono, Overline, Pill, PressableScale, PrimaryButton, Reveal, SectionLabel } from '../components';
 import { TOTAL_DECISIONS } from '../engine/events';
+import {
+  DIVINE_BLESS_COST,
+  DIVINE_CURSE_COST,
+  deityOf,
+  divineJournal,
+  divineKindAccent,
+  divineKindLabel,
+  faithOf,
+  pendingDivine,
+} from '../engine/divine';
 import type { Location, Universe } from '../engine/types';
 import { accents, covers, fillImage, font, palette, radius, space } from '../theme';
 import type { ParallelStore } from '../state/useParallel';
 
-type TabKey = 'overview' | 'map' | 'people' | 'chronicle';
+type TabKey = 'overview' | 'map' | 'people' | 'god' | 'chronicle';
 
-const TABS: { id: TabKey; label: string; icon: 'compass' | 'map' | 'people' | 'timeline' }[] = [
+const TABS: { id: TabKey; label: string; icon: 'compass' | 'map' | 'people' | 'timeline' | 'spark' }[] = [
   { id: 'overview', label: 'Обзор', icon: 'compass' },
   { id: 'map', label: 'Карта', icon: 'map' },
   { id: 'people', label: 'Жители', icon: 'people' },
+  { id: 'god', label: 'Бог', icon: 'spark' },
   { id: 'chronicle', label: 'Хроника', icon: 'timeline' },
 ];
 
@@ -143,6 +154,7 @@ export function WorldScreen({ store }: { store: ParallelStore }) {
             {tab === 'overview' ? <Overview universe={universe} store={store} onOpenMap={() => setTab('map')} /> : null}
             {tab === 'map' ? <MapTab universe={universe} store={store} /> : null}
             {tab === 'people' ? <PeopleTab universe={universe} store={store} /> : null}
+            {tab === 'god' ? <GodTab universe={universe} store={store} /> : null}
             {tab === 'chronicle' ? <ChronicleTab universe={universe} /> : null}
           </View>
         </ScrollView>
@@ -455,6 +467,50 @@ function ChronicleTab({ universe }: { universe: Universe }) {
 }
 
 const styles = StyleSheet.create({
+  godHero: {
+    padding: 16,
+    borderRadius: radius.lg,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(196,180,255,0.22)',
+    backgroundColor: 'rgba(22,18,44,0.7)',
+    gap: 8,
+  },
+  godName: { fontFamily: font.display, fontSize: 24, lineHeight: 32, letterSpacing: -0.5, color: palette.text },
+  godHint: { fontFamily: font.body, fontSize: 11.5, lineHeight: 18, color: palette.faint },
+  faithRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 4 },
+  faithTrack: { flex: 1, height: 3, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.1)' },
+  faithFill: { height: 3, borderRadius: 3, backgroundColor: palette.violetHi },
+  godCard: {
+    padding: 16,
+    borderRadius: radius.lg,
+    borderWidth: StyleSheet.hairlineWidth,
+    backgroundColor: 'rgba(20,16,40,0.72)',
+    gap: 8,
+  },
+  godTitle: { fontFamily: font.displayBook, fontSize: 17, lineHeight: 24, color: palette.text },
+  godText: { fontFamily: font.body, fontSize: 13, lineHeight: 21, color: palette.textSoft },
+  godActions: { flexDirection: 'row', gap: 8, marginTop: 8 },
+  godAction: {
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderRadius: radius.md,
+    borderWidth: StyleSheet.hairlineWidth,
+    gap: 3,
+  },
+  godActionOff: { opacity: 0.4 },
+  godActionTitle: { fontFamily: font.bodySemi, fontSize: 13 },
+  godActionEffect: { fontFamily: font.mono, fontSize: 9.5, color: palette.faint },
+  godEmpty: {
+    padding: 16,
+    borderRadius: radius.md,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: palette.lineSoft,
+    backgroundColor: 'rgba(255,255,255,0.02)',
+  },
+  journalRow: { flexDirection: 'row', gap: 10, alignItems: 'flex-start' },
+  journalTitle: { fontFamily: font.bodySemi, fontSize: 12.5, color: palette.text },
+  journalText: { fontFamily: font.body, fontSize: 11.5, lineHeight: 17, color: palette.muted, marginTop: 2 },
+
   newsRow: {
     padding: 13,
     borderRadius: radius.md,
@@ -633,3 +689,99 @@ const styles = StyleSheet.create({
     borderTopColor: palette.lineSoft,
   },
 });
+
+
+function GodTab({ universe, store }: { universe: Universe; store: ParallelStore }) {
+  const pending = pendingDivine(universe);
+  const faith = faithOf(universe.state);
+  const journal = divineJournal(universe.state);
+  const blessAffordable = faith >= DIVINE_BLESS_COST;
+  const curseAffordable = faith >= DIVINE_CURSE_COST;
+
+  return (
+    <View style={{ gap: 18 }}>
+      <View style={styles.godHero}>
+        <Overline color={palette.violetHi}>вы — бог этой вселенной</Overline>
+        <Text style={styles.godName}>{deityOf(universe)}</Text>
+        <Text style={styles.godHint}>
+          Мир слышит вас, пока в вас верят. Милость стоит {DIVINE_BLESS_COST} веры, кара — {DIVINE_CURSE_COST}. Каждое решение мира
+          добавляет веры.
+        </Text>
+        <View style={styles.faithRow}>
+          <View style={styles.faithTrack}>
+            <View style={[styles.faithFill, { width: Math.min(100, faith) + '%' }]} />
+          </View>
+          <Mono>вера {faith}</Mono>
+        </View>
+      </View>
+
+      {pending ? (
+        <View style={[styles.godCard, { borderColor: accents[divineKindAccent[pending.kind]].core + '55' }]}>
+          <Overline color={accents[divineKindAccent[pending.kind]].text}>{divineKindLabel[pending.kind]}</Overline>
+          <Text style={styles.godTitle}>{pending.title}</Text>
+          <Text style={styles.godText}>{pending.text}</Text>
+          <View style={styles.godActions}>
+            <View style={{ flex: 1 }}>
+              <PressableScale onPress={store.blessDivine} disabled={!blessAffordable}>
+                <View
+                  style={[
+                    styles.godAction,
+                    { borderColor: palette.green + '66', backgroundColor: 'rgba(80,200,140,0.10)' },
+                    !blessAffordable && styles.godActionOff,
+                  ]}
+                >
+                  <Text style={[styles.godActionTitle, { color: palette.green }]}>Благословить</Text>
+                  <Text style={styles.godActionEffect}>−{DIVINE_BLESS_COST} веры · +доверие</Text>
+                </View>
+              </PressableScale>
+            </View>
+            <View style={{ flex: 1 }}>
+              <PressableScale onPress={store.curseDivine} disabled={!curseAffordable}>
+                <View
+                  style={[
+                    styles.godAction,
+                    { borderColor: palette.rose + '66', backgroundColor: 'rgba(255,110,140,0.10)' },
+                    !curseAffordable && styles.godActionOff,
+                  ]}
+                >
+                  <Text style={[styles.godActionTitle, { color: palette.rose }]}>Покарать</Text>
+                  <Text style={styles.godActionEffect}>−{DIVINE_CURSE_COST} веры · +порядок</Text>
+                </View>
+              </PressableScale>
+            </View>
+          </View>
+          {!blessAffordable && !curseAffordable ? (
+            <Text style={styles.godHint}>Веры не хватает. Примите решение в мире — вера вернётся.</Text>
+          ) : null}
+        </View>
+      ) : (
+        <View style={styles.godEmpty}>
+          <Text style={styles.godHint}>
+            Вы уже ответили на знамение этого хода. Следующее придёт после следующего решения.
+          </Text>
+        </View>
+      )}
+
+      <View>
+        <SectionLabel accent="violet">журнал бога</SectionLabel>
+        {journal.length > 0 ? (
+          <View style={{ gap: 10 }}>
+            {journal.map((event) => (
+              <View key={event.id} style={styles.journalRow}>
+                <Pill accent={event.resolved === 'bless' ? 'green' : 'rose'}>
+                  {event.resolved === 'bless' ? 'милость' : 'кара'}
+                </Pill>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.journalTitle}>{event.title}</Text>
+                  <Text style={styles.journalText}>{event.result}</Text>
+                </View>
+              </View>
+            ))}
+          </View>
+        ) : (
+          <Text style={styles.godHint}>Пока пусто. Ответьте на первое знамение — запись появится здесь.</Text>
+        )}
+      </View>
+    </View>
+  );
+}
