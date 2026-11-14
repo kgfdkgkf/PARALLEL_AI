@@ -8,6 +8,7 @@ import { AiCover } from '../components/AiCover';
 import { Signet } from '../components/Avatar';
 import { CharacterPortrait, LocationArt } from '../components/Portraits';
 import { MapSheet, WorldMap } from '../components/WorldMap';
+import { DeityOrb } from '../components/DeityOrb';
 import { MetricBars, MetricRadar, describeMetrics } from '../components/Metrics';
 import { Divider, Glass, Icon, IconButton, ModeBadge, Mono, Overline, Pill, PressableScale, PrimaryButton, Reveal, SectionLabel } from '../components';
 import { TOTAL_DECISIONS } from '../engine/events';
@@ -158,6 +159,17 @@ export function WorldScreen({ store }: { store: ParallelStore }) {
             {tab === 'chronicle' ? <ChronicleTab universe={universe} /> : null}
           </View>
         </ScrollView>
+
+        {tab !== 'god' ? (
+          <View style={styles.orbFloat} pointerEvents="box-none">
+            <DeityOrb
+              accent={universe.accent}
+              name={deityOf(universe)}
+              hint="воззвать"
+              onPress={() => setTab('god')}
+            />
+          </View>
+        ) : null}
 
         <View style={[styles.actionBar, { paddingBottom: Math.max(insets.bottom, 14) }]}>
           {ending ? (
@@ -331,7 +343,7 @@ function Overview({ universe, store, onOpenMap }: { universe: Universe; store: P
         <View style={{ gap: 8 }}>
           {state.locations.slice(0, 3).map((location) => (
             <View key={location.id} style={styles.placeRow}>
-              <LocationArt name={location.name} accent={location.accent} width={54} height={40} />
+              <LocationArt name={location.name} seed={universe.seed} accent={location.accent} width={54} height={40} />
               <View style={{ flex: 1 }}>
                 <Text style={styles.placeName}>{location.name}</Text>
                 <Text style={styles.placeBlurb}>{location.blurb}</Text>
@@ -381,6 +393,7 @@ function MapTab({ universe, store }: { universe: Universe; store: ParallelStore 
           accent={location.accent}
           characterName={resident?.name}
           onOpenCharacter={resident ? () => store.openCharacter(resident.id) : undefined}
+          seed={universe.seed}
           onExplore={() => store.explore(location.id)}
           explored={location.visitedTurn === universe.state.turn}
         />
@@ -399,7 +412,7 @@ function PeopleTab({ universe, store }: { universe: Universe; store: ParallelSto
           <PressableScale key={character.id} onPress={() => store.openCharacter(character.id)}>
             <View style={[styles.personCard, { borderColor: scheme.core + '2A' }]}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
-                <CharacterPortrait name={character.name} accent={character.accent} stance={character.stance} width={62} height={80} />
+                <CharacterPortrait name={character.name} seed={universe.seed} accent={character.accent} stance={character.stance} width={62} height={80} />
                 <View style={{ flex: 1 }}>
                   <Text style={styles.personName}>{character.name}</Text>
                   <Overline color={scheme.text} style={{ marginTop: 3 }}>{character.role}</Overline>
@@ -676,6 +689,7 @@ const styles = StyleSheet.create({
   },
   timelineTitle: { fontFamily: font.bodySemi, fontSize: 14, color: palette.text },
   timelineText: { fontFamily: font.body, fontSize: 13, lineHeight: 21, color: palette.muted },
+  orbFloat: { position: 'absolute', right: 16, bottom: 112, zIndex: 40 },
   actionBar: {
     position: 'absolute',
     left: 0,

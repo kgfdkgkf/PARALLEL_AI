@@ -21,15 +21,33 @@ export function worldArtUrl(universe: Universe): string | null {
   const cached = cache.get(universe.id);
   if (cached) return cached;
 
+  const palettes: Record<string, string> = {
+    violet: 'deep violet and cold lavender light, black sky, neon reflections',
+    cyan: 'teal and icy cyan light, chrome surfaces, wet asphalt reflections',
+    gold: 'warm amber and dusty gold light, sandstone and brass, sunset haze',
+    rose: 'muted crimson and rose light, velvet shadow, smoke',
+    green: 'acid green and moss light, glass towers, humid haze',
+  };
+  const styles = [
+    'brutalist megastructure at dusk, vast empty plaza, monumental scale',
+    'layered floating city above clouds, impossible architecture',
+    'monolithic archive interior, endless shelves, single shaft of light',
+    'flooded city street, broken neon signs, distant towers in mist',
+    'industrial ritual ground, stone circles and cables, cold dawn',
+    'vertical farm district, glass domes, cables and haze',
+  ];
+  const index = universe.seed % styles.length;
+  const keywords = [universe.genre, universe.state.laws[0]?.text ?? '', universe.signature?.title ?? '']
+    .join(' ')
+    .slice(0, 120);
+
   const prompt = [
-    'wide cinematic environment concept art',
-    universe.title.toLowerCase(),
-    universe.genre.toLowerCase(),
-    universe.premise.slice(0, 140),
+    styles[index],
+    keywords,
+    palettes[universe.accent] ?? palettes.violet,
     `year ${universe.era}`,
-    'empty landscape, architecture and sky only',
-    'no people, no characters, no portrait, no anime, no girl, no boy, no face',
-    'painterly matte painting, muted cinematic palette, volumetric haze, epic scale, film still',
+    'environment only, architecture and sky',
+    'photorealistic matte painting, cinematic haze, no text, no letters, no screens, no ui, no people, no faces, no anime',
   ]
     .filter(Boolean)
     .join(', ');

@@ -78,6 +78,29 @@ export function ForgeScreen({ store }: { store: ParallelStore }) {
               </Svg>
             </Animated.View>
             <Animated.View
+              style={[
+                StyleSheet.absoluteFill,
+                { transform: [{ rotate: spinB.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '-360deg'] }) }] },
+              ]}
+            >
+              <Svg width={240} height={240}>
+                {Array.from({ length: 14 }).map((_, index) => {
+                  const angle = (Math.PI * 2 * index) / 14;
+                  const radius = 100 + (index % 3) * 9;
+                  return (
+                    <Circle
+                      key={index}
+                      cx={120 + Math.cos(angle) * radius}
+                      cy={120 + Math.sin(angle) * radius}
+                      r={index % 4 === 0 ? 2 : 1}
+                      fill={index % 2 === 0 ? scheme.hi : palette.cyan}
+                      opacity={index % 4 === 0 ? 0.9 : 0.45}
+                    />
+                  );
+                })}
+              </Svg>
+            </Animated.View>
+            <Animated.View
               style={{
                 width: 128,
                 height: 128,

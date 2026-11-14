@@ -135,7 +135,7 @@ export function CharacterScreen({ store }: { store: ParallelStore }) {
             </View>
             <Reveal>
               <View style={styles.identity}>
-                <CharacterPortrait name={character.name} accent={character.accent} stance={character.stance} width={96} height={124} />
+                <CharacterPortrait name={character.name} seed={universe.seed} accent={character.accent} stance={character.stance} width={96} height={124} />
                 <View style={{ flex: 1, gap: 4 }}>
                   <Text style={styles.name}>{character.name}</Text>
                   <Overline color={scheme.text}>{character.role}</Overline>

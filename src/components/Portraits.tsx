@@ -14,6 +14,7 @@ import type { Stance } from '../engine/types';
  */
 export function CharacterPortrait({
   name,
+  seed,
   accent = 'violet',
   stance = 'transcend',
   width = 96,
@@ -22,6 +23,7 @@ export function CharacterPortrait({
   detailed = false,
 }: {
   name: string;
+  seed?: number;
   accent?: AccentKey;
   stance?: Stance;
   width?: number;
@@ -30,10 +32,10 @@ export function CharacterPortrait({
   detailed?: boolean;
 }) {
   const scheme = accents[accent];
-  const seed = useMemo(() => hashString(`portrait:${name}`), [name]);
-  const random = useMemo(() => mulberry32(seed), [seed]);
+  const seedBase = seed ?? 0;
+  const seedValue = useMemo(() => hashString(`portrait:${name}:${seedBase}`), [name, seedBase]);
   const data = useMemo(() => {
-    const rnd = mulberry32(seed);
+    const rnd = mulberry32(seedValue);
     return {
       tilt: (rnd() - 0.5) * 14,
       headX: width * (0.46 + rnd() * 0.1),
@@ -48,9 +50,9 @@ export function CharacterPortrait({
       })),
       rings: 2 + Math.floor(rnd() * 2),
     };
-  }, [seed, width, height, detailed]);
+  }, [seedValue, width, height, detailed]);
 
-  const id = `pt${seed.toString(36)}`;
+  const id = `pt${seedValue.toString(36)}`;
   const second = accent === 'violet' ? 'cyan' : accent === 'cyan' ? 'violet' : accent === 'gold' ? 'rose' : 'cyan';
   const secondScheme = accents[second];
 
@@ -149,12 +151,14 @@ export function CharacterPortrait({
 /** Пейзаж-постер места: небо, светило и слои рельефа из seed названия. */
 export function LocationArt({
   name,
+  seed,
   accent = 'violet',
   width: widthProp,
   height = 108,
   style,
 }: {
   name: string;
+  seed?: number;
   accent?: AccentKey;
   width?: number;
   height?: number;
@@ -163,9 +167,10 @@ export function LocationArt({
   const { width: screenWidth } = useWindowDimensions();
   const width = widthProp ?? Math.min(screenWidth - 80, 460);
   const scheme = accents[accent];
-  const seed = useMemo(() => hashString(`place:${name}`), [name]);
+  const seedBase = seed ?? 0;
+  const seedHash = useMemo(() => hashString(`place:${name}:${seedBase}`), [name, seedBase]);
   const layers = useMemo(() => {
-    const rnd = mulberry32(seed);
+    const rnd = mulberry32(seedHash);
     return {
       sunX: width * (0.2 + rnd() * 0.6),
       sunY: height * (0.3 + rnd() * 0.18),
@@ -184,9 +189,9 @@ export function LocationArt({
       }),
       stars: Array.from({ length: 18 }, () => ({ x: rnd() * width, y: rnd() * height * 0.5, r: 0.4 + rnd() * 1.1, o: 0.2 + rnd() * 0.5 })),
     };
-  }, [seed, width, height]);
+  }, [seedHash, width, height]);
 
-  const id = `pl${seed.toString(36)}`;
+  const id = `pl${seedHash.toString(36)}`;
 
   return (
     <View style={[{ width, height, borderRadius: 12, overflow: 'hidden' }, style]}>

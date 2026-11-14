@@ -193,6 +193,7 @@ export function MapSheet({
   characterName,
   onExplore,
   explored,
+  seed,
 }: {
   location: Location;
   accent?: AccentKey;
@@ -200,6 +201,7 @@ export function MapSheet({
   characterName?: string;
   onExplore?: () => void;
   explored?: boolean;
+  seed?: number;
 }) {
   const scheme = accents[accent];
   const { width: screenWidth } = useWindowDimensions();
@@ -207,6 +209,7 @@ export function MapSheet({
     <View style={[styles.sheet, { borderColor: scheme.core + '3D' }]}>
       <LocationArt
         name={location.name}
+        seed={seed}
         accent={location.accent}
         width={Math.min(screenWidth - 72, 440)}
         height={92}

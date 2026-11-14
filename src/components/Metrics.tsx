@@ -6,7 +6,7 @@ import type { MetricKey, Metrics } from '../engine/types';
 
 export const METRIC_META: { key: MetricKey; label: string; short: string; accent: AccentKey }[] = [
   { key: 'order', label: 'Порядок', short: 'ПОР', accent: 'gold' },
-  { key: 'freedom', label: 'Свобода', short: 'СВО', accent: 'green' },
+  { key: 'freedom', label: 'Свобода', short: 'ВОЛЯ', accent: 'green' },
   { key: 'trust', label: 'Доверие', short: 'ДОВ', accent: 'violet' },
   { key: 'tech', label: 'Технологии', short: 'ТЕХ', accent: 'cyan' },
 ];
