@@ -71,7 +71,7 @@ const styles = StyleSheet.create({
   item: { alignItems: 'center', gap: 5, paddingVertical: 2 },
   label: {
     fontFamily: font.bodySemi,
-    fontSize: 10.5,
+    fontSize: 12,
     letterSpacing: 0.9,
     color: palette.faint,
   },

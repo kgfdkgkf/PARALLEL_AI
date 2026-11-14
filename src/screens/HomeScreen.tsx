@@ -115,7 +115,7 @@ export function HomeScreen({ store }: { store: ParallelStore }) {
                   <BrandMark size={40} />
                   <View style={{ flex: 1 }}>
                     <Text style={styles.brandName}>ПАРАЛЛЕЛЬ</Text>
-                    <Mono style={{ marginTop: 3, fontSize: 9.5 }}>лаборатория реальностей</Mono>
+                    <Mono style={{ marginTop: 3, fontSize: 11 }}>лаборатория реальностей</Mono>
                   </View>
                   <ModeBadge mode={store.engineMode} />
                 </View>
@@ -294,7 +294,7 @@ const styles = StyleSheet.create({
   heroTitle: {
     fontFamily: font.display,
     fontSize: 31,
-    lineHeight: 40,
+    lineHeight: 44,
     letterSpacing: -1.1,
     color: palette.text,
   },
@@ -302,14 +302,14 @@ const styles = StyleSheet.create({
     marginTop: 14,
     maxWidth: 336,
     fontFamily: font.body,
-    fontSize: 14.5,
-    lineHeight: 21,
+    fontSize: 15,
+    lineHeight: 24,
     color: palette.muted,
   },
   heroFlow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 26, maxWidth: 320 },
   heroFlowItem: { gap: 3 },
-  heroFlowIndex: { fontFamily: font.mono, fontSize: 10, letterSpacing: 1, color: palette.violetHi },
-  heroFlowLabel: { fontFamily: font.bodySemi, fontSize: 11.5, letterSpacing: 0.6, color: palette.textSoft },
+  heroFlowIndex: { fontFamily: font.mono, fontSize: 11.5, letterSpacing: 1, color: palette.violetHi },
+  heroFlowLabel: { fontFamily: font.bodySemi, fontSize: 12.5, letterSpacing: 0.6, color: palette.textSoft },
   heroFlowLine: { flex: 1, height: StyleSheet.hairlineWidth, backgroundColor: palette.lineStrong, minWidth: 14 },
   dailyCard: {
     padding: 16,
@@ -321,9 +321,9 @@ const styles = StyleSheet.create({
   },
   dailyTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   dailyStreak: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  dailyText: { fontFamily: font.bodySemi, fontSize: 15, lineHeight: 23, color: palette.text },
+  dailyText: { fontFamily: font.bodySemi, fontSize: 15, lineHeight: 26, color: palette.text },
   dailyFoot: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 2 },
-  dailyAction: { fontFamily: font.bodySemi, fontSize: 11.5, letterSpacing: 0.4, color: palette.gold },
+  dailyAction: { fontFamily: font.bodySemi, fontSize: 12.5, letterSpacing: 0.4, color: palette.gold },
   quickRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 14 },
   dotDivider: { width: 3, height: 3, borderRadius: 3, backgroundColor: palette.faint, opacity: 0.7 },
   continueCard: {
@@ -338,7 +338,7 @@ const styles = StyleSheet.create({
   },
   continueCover: { width: 56, height: 56, borderRadius: 12 },
   continueBody: { flex: 1, gap: 2 },
-  continueTitle: { fontFamily: font.bodySemi, fontSize: 14.5, color: palette.text, lineHeight: 19 },
+  continueTitle: { fontFamily: font.bodySemi, fontSize: 15, color: palette.text, lineHeight: 22 },
   feature: {
     height: 402,
     borderRadius: radius.lg,
@@ -357,13 +357,13 @@ const styles = StyleSheet.create({
   featureTitle: {
     fontFamily: font.display,
     fontSize: 24,
-    lineHeight: 31,
+    lineHeight: 35,
     letterSpacing: -0.5,
     color: palette.text,
   },
-  featurePremise: { fontFamily: font.body, fontSize: 13, lineHeight: 19, color: palette.muted },
+  featurePremise: { fontFamily: font.body, fontSize: 13.5, lineHeight: 22, color: palette.muted },
   featureFoot: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 10 },
-  featureHint: { flex: 1, fontFamily: font.body, fontSize: 12.5, lineHeight: 17, color: palette.faint },
+  featureHint: { flex: 1, fontFamily: font.body, fontSize: 13, lineHeight: 20, color: palette.faint },
   featureArrow: {
     width: 34,
     height: 34,
@@ -383,9 +383,9 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: palette.lineSoft,
   },
-  promptIndex: { fontFamily: font.mono, fontSize: 11, letterSpacing: 1.6, color: palette.violetHi, opacity: 0.8 },
-  promptText: { fontFamily: font.bodySemi, fontSize: 14, lineHeight: 21, color: palette.text, marginTop: 12 },
+  promptIndex: { fontFamily: font.mono, fontSize: 12, letterSpacing: 1.6, color: palette.violetHi, opacity: 0.8 },
+  promptText: { fontFamily: font.bodySemi, fontSize: 14.5, lineHeight: 24, color: palette.text, marginTop: 12 },
   promptFoot: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 16 },
   footer: { marginTop: space.lg, paddingBottom: space.sm },
-  footerText: { fontFamily: font.body, fontSize: 12.5, lineHeight: 18, color: palette.faint },
+  footerText: { fontFamily: font.body, fontSize: 13, lineHeight: 21, color: palette.faint },
 });

@@ -131,17 +131,17 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: font.display,
     fontSize: 26,
-    lineHeight: 34,
+    lineHeight: 38,
     letterSpacing: -0.7,
     color: palette.text,
   },
   text: {
     fontFamily: font.body,
-    fontSize: 13.5,
-    lineHeight: 22,
+    fontSize: 14,
+    lineHeight: 25,
     color: palette.muted,
   },
   dots: { flexDirection: 'row', justifyContent: 'center', gap: 6, marginBottom: 6 },
   dot: { height: 6, borderRadius: 6 },
-  skip: { fontFamily: font.body, fontSize: 12, color: palette.faint, textAlign: 'center', paddingVertical: 6 },
+  skip: { fontFamily: font.body, fontSize: 13, color: palette.faint, textAlign: 'center', paddingVertical: 6 },
 });

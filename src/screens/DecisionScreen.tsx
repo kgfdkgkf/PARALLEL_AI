@@ -112,7 +112,7 @@ export function DecisionScreen({ store }: { store: ParallelStore }) {
             <Image source={covers[universe.cover]} resizeMode="cover" style={fillImage} />
             <AiCover universe={universe} />
             <LinearGradient
-              colors={['rgba(5,5,12,0.35)', palette.ink]}
+              colors={['rgba(5,5,12,0.42)', palette.ink]}
               locations={[0, 1]}
               style={StyleSheet.absoluteFill}
             />
@@ -285,10 +285,10 @@ const styles = StyleSheet.create({
     gap: 8,
     alignItems: 'flex-start',
   },
-  aiNoticeText: { flex: 1, fontFamily: font.body, fontSize: 11.5, lineHeight: 18, color: palette.textSoft },
+  aiNoticeText: { flex: 1, fontFamily: font.body, fontSize: 12.5, lineHeight: 21, color: palette.textSoft },
   cover: { height: 214, marginHorizontal: 20, borderRadius: radius.lg, overflow: 'hidden', marginBottom: 18 },
-  coverTitle: { fontFamily: font.display, fontSize: 24, lineHeight: 33, letterSpacing: -0.5, color: palette.text, marginTop: 8 },
-  context: { fontFamily: font.body, fontSize: 14.5, lineHeight: 22, color: palette.textSoft },
+  coverTitle: { fontFamily: font.display, fontSize: 24, lineHeight: 37, letterSpacing: -0.5, color: palette.text, marginTop: 8 },
+  context: { fontFamily: font.body, fontSize: 15, lineHeight: 25, color: palette.textSoft },
   questionCard: {
     padding: 16,
     borderRadius: radius.md,
@@ -297,8 +297,8 @@ const styles = StyleSheet.create({
     borderColor: palette.line,
     gap: 8,
   },
-  questionLabel: { fontFamily: font.bodySemi, fontSize: 9.5, letterSpacing: 2, color: palette.gold },
-  question: { fontFamily: font.bodySemi, fontSize: 16, lineHeight: 24, color: palette.text },
+  questionLabel: { fontFamily: font.bodySemi, fontSize: 11, letterSpacing: 2, color: palette.gold },
+  question: { fontFamily: font.bodySemi, fontSize: 16, lineHeight: 28, color: palette.text },
   option: {
     padding: 16,
     borderRadius: radius.lg,
@@ -308,8 +308,8 @@ const styles = StyleSheet.create({
   optionTop: { flexDirection: 'row', gap: 12, alignItems: 'flex-start' },
   optionRadio: { width: 18, height: 18, borderRadius: 18, borderWidth: 1.2, alignItems: 'center', justifyContent: 'center', marginTop: 2 },
   optionRadioDot: { width: 8, height: 8, borderRadius: 8 },
-  optionTitle: { fontFamily: font.bodySemi, fontSize: 14.5, lineHeight: 21, color: palette.text },
-  optionDetail: { fontFamily: font.body, fontSize: 13, lineHeight: 19, color: palette.muted },
+  optionTitle: { fontFamily: font.bodySemi, fontSize: 15, lineHeight: 24, color: palette.text },
+  optionDetail: { fontFamily: font.body, fontSize: 13.5, lineHeight: 22, color: palette.muted },
   effect: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -319,14 +319,14 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
     backgroundColor: 'rgba(255,255,255,0.045)',
   },
-  effectValue: { fontFamily: font.bodyBold, fontSize: 11.5 },
-  effectLabel: { fontFamily: font.bodySemi, fontSize: 9.5, letterSpacing: 0.8, color: palette.faint },
+  effectValue: { fontFamily: font.bodyBold, fontSize: 12.5 },
+  effectLabel: { fontFamily: font.bodySemi, fontSize: 11, letterSpacing: 0.8, color: palette.faint },
   optionFoot: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 },
-  optionCost: { fontFamily: font.body, fontSize: 12, color: palette.faint },
+  optionCost: { fontFamily: font.body, fontSize: 13, color: palette.faint },
   stateTitle: {
     fontFamily: font.display,
     fontSize: 19,
-    lineHeight: 27,
+    lineHeight: 31,
     letterSpacing: -0.3,
     color: palette.text,
     textAlign: 'center',
@@ -334,14 +334,14 @@ const styles = StyleSheet.create({
   },
   stateText: {
     fontFamily: font.body,
-    fontSize: 13,
-    lineHeight: 21,
+    fontSize: 13.5,
+    lineHeight: 24,
     color: palette.muted,
     textAlign: 'center',
     marginTop: 12,
     maxWidth: 320,
   },
-  allyHint: { fontFamily: font.body, fontSize: 11.5, lineHeight: 18, color: palette.faint, marginBottom: 10 },
+  allyHint: { fontFamily: font.body, fontSize: 12.5, lineHeight: 21, color: palette.faint, marginBottom: 10 },
   allyRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   allyChip: {
     flexDirection: 'row',
@@ -354,12 +354,12 @@ const styles = StyleSheet.create({
     borderColor: palette.line,
     backgroundColor: 'rgba(255,255,255,0.03)',
   },
-  allyName: { fontFamily: font.bodySemi, fontSize: 12, color: palette.textSoft },
-  allyBond: { fontFamily: font.mono, fontSize: 9.5, color: palette.faint, marginTop: 2 },
-  warning: { fontFamily: font.body, fontSize: 12, lineHeight: 17, color: palette.faint, marginTop: 4 },
+  allyName: { fontFamily: font.bodySemi, fontSize: 13, color: palette.textSoft },
+  allyBond: { fontFamily: font.mono, fontSize: 11, color: palette.faint, marginTop: 2 },
+  warning: { fontFamily: font.body, fontSize: 13, lineHeight: 20, color: palette.faint, marginTop: 4 },
   actionHint: {
     fontFamily: font.body,
-    fontSize: 12,
+    fontSize: 13,
     color: palette.faint,
     textAlign: 'center',
     marginBottom: 8,

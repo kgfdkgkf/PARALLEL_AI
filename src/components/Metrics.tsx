@@ -156,9 +156,9 @@ export function describeMetrics(metrics: Metrics): string {
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  barLabel: { fontFamily: font.bodySemi, fontSize: 11, letterSpacing: 1.6, color: palette.muted },
-  barValue: { fontFamily: font.displayBook, fontSize: 13, letterSpacing: 0.4 },
-  delta: { fontFamily: font.bodySemi, fontSize: 11.5, letterSpacing: 0.4 },
+  barLabel: { fontFamily: font.bodySemi, fontSize: 12, letterSpacing: 1.6, color: palette.muted },
+  barValue: { fontFamily: font.displayBook, fontSize: 13.5, letterSpacing: 0.4 },
+  delta: { fontFamily: font.bodySemi, fontSize: 12.5, letterSpacing: 0.4 },
   track: {
     height: 3,
     borderRadius: 3,
@@ -180,6 +180,6 @@ const styles = StyleSheet.create({
     borderColor: palette.lineSoft,
   },
   chipDot: { width: 4, height: 4, borderRadius: 4 },
-  chipLabel: { fontFamily: font.bodySemi, fontSize: 9.5, letterSpacing: 1, color: palette.faint },
-  chipValue: { fontFamily: font.bodySemi, fontSize: 11.5 },
+  chipLabel: { fontFamily: font.bodySemi, fontSize: 11, letterSpacing: 1, color: palette.faint },
+  chipValue: { fontFamily: font.bodySemi, fontSize: 12.5 },
 });

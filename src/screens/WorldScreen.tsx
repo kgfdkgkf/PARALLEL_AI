@@ -90,7 +90,7 @@ export function WorldScreen({ store }: { store: ParallelStore }) {
               <Image source={covers[universe.cover]} resizeMode="cover" style={fillImage} />
               <AiCover universe={universe} />
               <LinearGradient
-                colors={['rgba(5,5,12,0.55)', 'rgba(5,5,12,0.45)', palette.ink]}
+                colors={['rgba(5,5,12,0.62)', 'rgba(5,5,12,0.66)', palette.ink]}
                 locations={[0, 0.55, 1]}
                 style={StyleSheet.absoluteFill}
               />
@@ -350,7 +350,7 @@ function MapTab({ universe, store }: { universe: Universe; store: ParallelStore 
   const resident = location ? universe.state.characters.find((item) => item.home === location.id) : undefined;
   const scene = store.scene && store.scene.locationId === location?.id ? store.scene : null;
   return (
-    <View style={{ gap: 16 }}>
+    <View style={{ gap: 22 }}>
       <SectionLabel accent={universe.accent}>карта реальности</SectionLabel>
       <WorldMap
         locations={universe.state.locations}
@@ -475,8 +475,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(22,18,44,0.7)',
     gap: 8,
   },
-  godName: { fontFamily: font.display, fontSize: 24, lineHeight: 32, letterSpacing: -0.5, color: palette.text },
-  godHint: { fontFamily: font.body, fontSize: 11.5, lineHeight: 18, color: palette.faint },
+  godName: { fontFamily: font.display, fontSize: 24, lineHeight: 36, letterSpacing: -0.5, color: palette.text },
+  godHint: { fontFamily: font.body, fontSize: 12.5, lineHeight: 21, color: palette.faint },
   faithRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 4 },
   faithTrack: { flex: 1, height: 3, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.1)' },
   faithFill: { height: 3, borderRadius: 3, backgroundColor: palette.violetHi },
@@ -487,8 +487,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(20,16,40,0.72)',
     gap: 8,
   },
-  godTitle: { fontFamily: font.displayBook, fontSize: 17, lineHeight: 24, color: palette.text },
-  godText: { fontFamily: font.body, fontSize: 13, lineHeight: 21, color: palette.textSoft },
+  godTitle: { fontFamily: font.displayBook, fontSize: 17, lineHeight: 28, color: palette.text },
+  godText: { fontFamily: font.body, fontSize: 13.5, lineHeight: 24, color: palette.textSoft },
   godActions: { flexDirection: 'row', gap: 8, marginTop: 8 },
   godAction: {
     paddingVertical: 12,
@@ -498,8 +498,8 @@ const styles = StyleSheet.create({
     gap: 3,
   },
   godActionOff: { opacity: 0.4 },
-  godActionTitle: { fontFamily: font.bodySemi, fontSize: 13 },
-  godActionEffect: { fontFamily: font.mono, fontSize: 9.5, color: palette.faint },
+  godActionTitle: { fontFamily: font.bodySemi, fontSize: 13.5 },
+  godActionEffect: { fontFamily: font.mono, fontSize: 11, color: palette.faint },
   godEmpty: {
     padding: 16,
     borderRadius: radius.md,
@@ -508,8 +508,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.02)',
   },
   journalRow: { flexDirection: 'row', gap: 10, alignItems: 'flex-start' },
-  journalTitle: { fontFamily: font.bodySemi, fontSize: 12.5, color: palette.text },
-  journalText: { fontFamily: font.body, fontSize: 11.5, lineHeight: 17, color: palette.muted, marginTop: 2 },
+  journalTitle: { fontFamily: font.bodySemi, fontSize: 13, color: palette.text },
+  journalText: { fontFamily: font.body, fontSize: 12.5, lineHeight: 20, color: palette.muted, marginTop: 2 },
 
   newsRow: {
     padding: 13,
@@ -521,8 +521,8 @@ const styles = StyleSheet.create({
   },
   newsHead: { flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' },
   newsDot: { width: 5, height: 5, borderRadius: 5 },
-  newsTitle: { fontFamily: font.bodySemi, fontSize: 13.5, lineHeight: 20, color: palette.text },
-  newsText: { fontFamily: font.body, fontSize: 12.5, lineHeight: 19, color: palette.muted },
+  newsTitle: { fontFamily: font.bodySemi, fontSize: 14, lineHeight: 23, color: palette.text },
+  newsText: { fontFamily: font.body, fontSize: 13, lineHeight: 22, color: palette.muted },
   newsEmpty: {
     flexDirection: 'row',
     gap: 10,
@@ -532,16 +532,16 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: palette.lineSoft,
   },
-  newsEmptyText: { flex: 1, fontFamily: font.body, fontSize: 12.5, lineHeight: 19, color: palette.faint },
+  newsEmptyText: { flex: 1, fontFamily: font.body, fontSize: 13, lineHeight: 22, color: palette.faint },
 
   topBar: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingBottom: 8, gap: 10 },
   hero: { height: 322, marginHorizontal: 20, marginTop: 2, borderRadius: radius.lg, overflow: 'hidden', justifyContent: 'flex-end' },
   heroBody: { padding: 18, gap: 8 },
-  heroTitle: { fontFamily: font.display, fontSize: 25, lineHeight: 32, letterSpacing: -0.6, color: palette.text },
-  heroQuestion: { fontFamily: font.body, fontSize: 13, lineHeight: 19, color: palette.textSoft, fontStyle: 'italic' },
+  heroTitle: { fontFamily: font.display, fontSize: 25, lineHeight: 36, letterSpacing: -0.6, color: palette.text },
+  heroQuestion: { fontFamily: font.body, fontSize: 13.5, lineHeight: 22, color: palette.textSoft, fontStyle: 'italic' },
   heroStats: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 10 },
   heroStat: { gap: 2 },
-  heroStatValue: { fontFamily: font.displayBook, fontSize: 15, lineHeight: 21 },
+  heroStatValue: { fontFamily: font.displayBook, fontSize: 15, lineHeight: 24 },
   heroStatDivider: { width: StyleSheet.hairlineWidth, height: 18, backgroundColor: palette.line },
   tabs: {
     flexDirection: 'row',
@@ -554,7 +554,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   tab: { alignItems: 'center', gap: 4, paddingVertical: 8 },
-  tabLabel: { fontFamily: font.bodySemi, fontSize: 11.5, letterSpacing: 0.5, color: palette.faint },
+  tabLabel: { fontFamily: font.bodySemi, fontSize: 12.5, letterSpacing: 0.5, color: palette.faint },
   tabMark: { width: 14, height: 2, borderRadius: 2, marginTop: 2 },
   ruleCard: {
     flexDirection: 'row',
@@ -564,9 +564,9 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     backgroundColor: 'rgba(20,16,40,0.66)',
   },
-  ruleMark: { fontFamily: font.display, fontSize: 22, lineHeight: 26 },
-  ruleText: { flex: 1, fontFamily: font.bodySemi, fontSize: 15, lineHeight: 23, color: palette.text },
-  premise: { fontFamily: font.body, fontSize: 14.5, lineHeight: 22, color: palette.muted, marginTop: 14 },
+  ruleMark: { fontFamily: font.display, fontSize: 22, lineHeight: 30 },
+  ruleText: { flex: 1, fontFamily: font.bodySemi, fontSize: 15, lineHeight: 26, color: palette.text },
+  premise: { fontFamily: font.body, fontSize: 15, lineHeight: 25, color: palette.muted, marginTop: 14 },
   listenRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -579,7 +579,7 @@ const styles = StyleSheet.create({
     borderColor: palette.line,
     backgroundColor: 'rgba(255,255,255,0.03)',
   },
-  listenText: { flex: 1, fontFamily: font.bodySemi, fontSize: 12.5 },
+  listenText: { flex: 1, fontFamily: font.bodySemi, fontSize: 13 },
   signatureCard: {
     marginTop: 16,
     padding: 16,
@@ -588,11 +588,11 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(20,16,40,0.66)',
     gap: 6,
   },
-  signatureTitle: { fontFamily: font.displayBook, fontSize: 16, lineHeight: 22, color: palette.text },
-  signatureText: { fontFamily: font.body, fontSize: 12.5, lineHeight: 19, color: palette.textSoft },
+  signatureTitle: { fontFamily: font.displayBook, fontSize: 16, lineHeight: 25, color: palette.text },
+  signatureText: { fontFamily: font.body, fontSize: 13, lineHeight: 22, color: palette.textSoft },
   roleRow: { flexDirection: 'row', gap: 14, marginTop: 16 },
-  roleText: { fontFamily: font.bodySemi, fontSize: 13.5, lineHeight: 20, color: palette.text, marginTop: 4 },
-  roleHint: { fontFamily: font.body, fontSize: 11.5, lineHeight: 17, color: palette.faint, marginTop: 4 },
+  roleText: { fontFamily: font.bodySemi, fontSize: 14, lineHeight: 23, color: palette.text, marginTop: 4 },
+  roleHint: { fontFamily: font.body, fontSize: 12.5, lineHeight: 20, color: palette.faint, marginTop: 4 },
   sceneCard: {
     padding: 16,
     borderRadius: radius.lg,
@@ -600,11 +600,11 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(20,16,40,0.72)',
     gap: 8,
   },
-  sceneTitle: { fontFamily: font.displayBook, fontSize: 16, lineHeight: 23, color: palette.text },
-  sceneText: { fontFamily: font.body, fontSize: 13, lineHeight: 21, color: palette.textSoft },
+  sceneTitle: { fontFamily: font.displayBook, fontSize: 16, lineHeight: 26, color: palette.text },
+  sceneText: { fontFamily: font.body, fontSize: 13.5, lineHeight: 24, color: palette.textSoft },
   sceneFoot: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 6 },
-  sceneClose: { fontFamily: font.bodySemi, fontSize: 11.5, color: palette.textSoft },
-  metricsLine: { fontFamily: font.bodySemi, fontSize: 13.5, lineHeight: 20, color: palette.textSoft },
+  sceneClose: { fontFamily: font.bodySemi, fontSize: 12.5, color: palette.textSoft },
+  metricsLine: { fontFamily: font.bodySemi, fontSize: 14, lineHeight: 23, color: palette.textSoft },
   lawRow: {
     flexDirection: 'row',
     gap: 12,
@@ -614,8 +614,8 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: palette.lineSoft,
   },
-  lawIndex: { fontFamily: font.mono, fontSize: 12, letterSpacing: 1, marginTop: 2 },
-  lawText: { fontFamily: font.body, fontSize: 13.5, lineHeight: 20, color: palette.textSoft },
+  lawIndex: { fontFamily: font.mono, fontSize: 13, letterSpacing: 1, marginTop: 2 },
+  lawText: { fontFamily: font.body, fontSize: 14, lineHeight: 23, color: palette.textSoft },
   cultureGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   cultureCell: {
     width: '47.6%',
@@ -627,12 +627,12 @@ const styles = StyleSheet.create({
     borderColor: palette.lineSoft,
     gap: 6,
   },
-  cultureValue: { fontFamily: font.body, fontSize: 12.5, lineHeight: 17, color: palette.muted },
+  cultureValue: { fontFamily: font.body, fontSize: 13, lineHeight: 20, color: palette.muted },
   memoryList: { gap: 8 },
   memoryRow: { flexDirection: 'row', gap: 10, alignItems: 'flex-start' },
   memoryDot: { width: 5, height: 5, borderRadius: 5, marginTop: 7 },
-  memoryText: { flex: 1, fontFamily: font.body, fontSize: 13, lineHeight: 19, color: palette.textSoft },
-  memoryHint: { fontFamily: font.body, fontSize: 12, lineHeight: 17, color: palette.faint, marginTop: 12 },
+  memoryText: { flex: 1, fontFamily: font.body, fontSize: 13.5, lineHeight: 22, color: palette.textSoft },
+  memoryHint: { fontFamily: font.body, fontSize: 13, lineHeight: 20, color: palette.faint, marginTop: 12 },
   placeRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -644,9 +644,9 @@ const styles = StyleSheet.create({
     borderColor: palette.lineSoft,
   },
   placeDot: { width: 7, height: 7, borderRadius: 7 },
-  placeName: { fontFamily: font.bodySemi, fontSize: 13, color: palette.text },
-  placeBlurb: { fontFamily: font.body, fontSize: 12.5, lineHeight: 16, color: palette.muted, marginTop: 2 },
-  mapHint: { fontFamily: font.body, fontSize: 12.5, lineHeight: 18, color: palette.faint },
+  placeName: { fontFamily: font.bodySemi, fontSize: 13.5, color: palette.text },
+  placeBlurb: { fontFamily: font.body, fontSize: 13, lineHeight: 19, color: palette.muted, marginTop: 2 },
+  mapHint: { fontFamily: font.body, fontSize: 13, lineHeight: 21, color: palette.faint },
   personCard: {
     padding: 16,
     borderRadius: radius.lg,
@@ -654,8 +654,8 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     gap: 12,
   },
-  personName: { fontFamily: font.displayBook, fontSize: 15.5, lineHeight: 22, color: palette.text },
-  personQuote: { fontFamily: font.body, fontSize: 13, lineHeight: 19, color: palette.textSoft, fontStyle: 'italic' },
+  personName: { fontFamily: font.displayBook, fontSize: 15.5, lineHeight: 25, color: palette.text },
+  personQuote: { fontFamily: font.body, fontSize: 13.5, lineHeight: 22, color: palette.textSoft, fontStyle: 'italic' },
   personFoot: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   bondTrack: { height: 2, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.08)' },
   bondFill: { height: 2, borderRadius: 2 },
@@ -674,8 +674,8 @@ const styles = StyleSheet.create({
     borderColor: palette.lineSoft,
     gap: 6,
   },
-  timelineTitle: { fontFamily: font.bodySemi, fontSize: 13.5, color: palette.text },
-  timelineText: { fontFamily: font.body, fontSize: 12.5, lineHeight: 18, color: palette.muted },
+  timelineTitle: { fontFamily: font.bodySemi, fontSize: 14, color: palette.text },
+  timelineText: { fontFamily: font.body, fontSize: 13, lineHeight: 21, color: palette.muted },
   actionBar: {
     position: 'absolute',
     left: 0,

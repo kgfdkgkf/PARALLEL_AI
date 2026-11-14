@@ -163,8 +163,8 @@ export function WorldMap({ locations, accent = 'violet', activeId, onSelect, hei
                 marginTop: 20,
                 textAlign: 'center',
                 fontFamily: font.bodySemi,
-                fontSize: 10.5,
-                lineHeight: 14,
+                fontSize: 12,
+                lineHeight: 17,
                 letterSpacing: 0.7,
                 textTransform: 'uppercase',
                 color: node.unlocked ? (isActive ? accents[node.accent].hi : palette.textSoft) : palette.faint,
@@ -177,7 +177,7 @@ export function WorldMap({ locations, accent = 'violet', activeId, onSelect, hei
       })}
 
       <View style={{ position: 'absolute', left: 2, bottom: 2 }}>
-        <Overline style={{ fontSize: 9.5 }}>карта реальности · {locations.filter((item) => item.unlocked).length}/{locations.length}</Overline>
+        <Overline style={{ fontSize: 11 }}>карта реальности · {locations.filter((item) => item.unlocked).length}/{locations.length}</Overline>
       </View>
       <View style={{ position: 'absolute', right: 2, bottom: 2 }}>
         <Text style={[styles.coords, { color: scheme.text }]}>51°N · 07°E</Text>
@@ -244,7 +244,7 @@ export function MapSheet({
 }
 
 const styles = StyleSheet.create({
-  coords: { fontFamily: font.mono, fontSize: 9.5, letterSpacing: 1.2, opacity: 0.7 },
+  coords: { fontFamily: font.mono, fontSize: 11, letterSpacing: 1.2, opacity: 0.7 },
   sheet: {
     borderRadius: radius.lg,
     borderWidth: StyleSheet.hairlineWidth,
@@ -253,10 +253,10 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   sheetTop: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
-  sheetTitle: { fontFamily: font.displayBook, fontSize: 16, lineHeight: 22, color: palette.text, letterSpacing: -0.2 },
+  sheetTitle: { fontFamily: font.displayBook, fontSize: 16, lineHeight: 25, color: palette.text, letterSpacing: -0.2 },
   sheetDot: { width: 7, height: 7, borderRadius: 7, marginTop: 4 },
-  sheetBlurb: { fontFamily: font.bodySemi, fontSize: 13.5, lineHeight: 20, color: palette.textSoft },
-  sheetDetail: { fontFamily: font.body, fontSize: 13.5, lineHeight: 21, color: palette.muted },
+  sheetBlurb: { fontFamily: font.bodySemi, fontSize: 14, lineHeight: 23, color: palette.textSoft },
+  sheetDetail: { fontFamily: font.body, fontSize: 14, lineHeight: 24, color: palette.muted },
   sheetAction: {
     marginTop: 4,
     flexDirection: 'row',
@@ -265,5 +265,5 @@ const styles = StyleSheet.create({
     borderTopWidth: StyleSheet.hairlineWidth,
     paddingTop: 12,
   },
-  sheetActionText: { fontFamily: font.bodySemi, fontSize: 12.5, letterSpacing: 0.4 },
+  sheetActionText: { fontFamily: font.bodySemi, fontSize: 13, letterSpacing: 0.4 },
 });

@@ -145,12 +145,12 @@ export function ForgeScreen({ store }: { store: ParallelStore }) {
 }
 
 const styles = StyleSheet.create({
-  counter: { fontFamily: font.display, fontSize: 32, lineHeight: 42, letterSpacing: -0.6, color: palette.text, marginTop: 6 },
+  counter: { fontFamily: font.display, fontSize: 32, lineHeight: 46, letterSpacing: -0.6, color: palette.text, marginTop: 6 },
   question: {
     marginTop: 26,
     fontFamily: font.body,
-    fontSize: 14,
-    lineHeight: 22,
+    fontSize: 14.5,
+    lineHeight: 25,
     color: palette.textSoft,
     textAlign: 'center',
     paddingHorizontal: 12,
@@ -158,7 +158,7 @@ const styles = StyleSheet.create({
   },
   stageRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 7 },
   stageDot: { width: 18, height: 18, borderRadius: 18, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
-  stageTitle: { fontFamily: font.bodySemi, fontSize: 13, letterSpacing: 0.2 },
+  stageTitle: { fontFamily: font.bodySemi, fontSize: 13.5, letterSpacing: 0.2 },
   progressTrack: {
     height: 2,
     borderRadius: 2,
@@ -167,5 +167,5 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   progressFill: { height: 2, borderRadius: 2 },
-  note: { fontFamily: font.body, fontSize: 12, lineHeight: 17, color: palette.faint, marginTop: 14 },
+  note: { fontFamily: font.body, fontSize: 13, lineHeight: 20, color: palette.faint, marginTop: 14 },
 });

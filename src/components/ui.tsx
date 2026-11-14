@@ -144,7 +144,7 @@ export function Pill({
       <Text
         style={{
           fontFamily: font.bodySemi,
-          fontSize: 10.5,
+          fontSize: 12,
           letterSpacing: 1.4,
           color: soft ? scheme.text : palette.ink,
           textTransform: 'uppercase',
@@ -309,7 +309,7 @@ export function ModeBadge({ mode }: { mode: 'demo' | 'ai' }) {
           backgroundColor: mode === 'ai' ? palette.green : palette.gold,
         }}
       />
-      <Text style={[text.mono, { color: mode === 'ai' ? palette.green : palette.gold, fontSize: 10.5 }]}>
+      <Text style={[text.mono, { color: mode === 'ai' ? palette.green : palette.gold, fontSize: 12 }]}>
         {mode === 'ai' ? 'AI CORE' : 'DEMO CORE'}
       </Text>
     </View>
@@ -349,7 +349,7 @@ const styles = StyleSheet.create({
   },
   primaryLabel: {
     fontFamily: font.displayBold,
-    fontSize: 12,
+    fontSize: 13,
     letterSpacing: 1.5,
     color: palette.ink,
   },
@@ -366,7 +366,7 @@ const styles = StyleSheet.create({
   },
   ghostLabel: {
     fontFamily: font.bodySemi,
-    fontSize: 12,
+    fontSize: 13,
     letterSpacing: 1.6,
     textTransform: 'uppercase',
   },
@@ -379,14 +379,14 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontFamily: font.bodySemi,
-    fontSize: 13.5,
+    fontSize: 14,
     letterSpacing: 2,
     color: palette.text,
     textTransform: 'uppercase',
   },
   headerSub: {
     fontFamily: font.body,
-    fontSize: 11.5,
+    fontSize: 12.5,
     letterSpacing: 0.6,
     color: palette.faint,
     marginTop: 3,

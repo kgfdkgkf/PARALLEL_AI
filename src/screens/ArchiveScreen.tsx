@@ -157,8 +157,8 @@ function plural(count: number, forms: [string, string, string]) {
 
 const styles = StyleSheet.create({
   topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 8 },
-  title: { fontFamily: font.display, fontSize: 28, lineHeight: 37, letterSpacing: -0.9, color: palette.text, marginTop: 18 },
-  subtitle: { fontFamily: font.body, fontSize: 13.5, lineHeight: 21, color: palette.muted, marginTop: 10 },
+  title: { fontFamily: font.display, fontSize: 28, lineHeight: 41, letterSpacing: -0.9, color: palette.text, marginTop: 18 },
+  subtitle: { fontFamily: font.body, fontSize: 14, lineHeight: 24, color: palette.muted, marginTop: 10 },
   empty: {
     alignItems: 'center',
     padding: 22,
@@ -169,7 +169,7 @@ const styles = StyleSheet.create({
   },
   emptyOrb: { width: 96, height: 96, borderRadius: 96, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(139,108,255,0.08)' },
   emptyTitle: { fontFamily: font.bodySemi, fontSize: 15, color: palette.text, marginTop: 10 },
-  emptyText: { fontFamily: font.body, fontSize: 13, lineHeight: 19, color: palette.muted, textAlign: 'center', marginTop: 8 },
+  emptyText: { fontFamily: font.body, fontSize: 13.5, lineHeight: 22, color: palette.muted, textAlign: 'center', marginTop: 8 },
   card: {
     flexDirection: 'row',
     gap: 14,
@@ -179,9 +179,9 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
   },
   cardCover: { width: 76, height: 108, borderRadius: 14 },
-  cardMetrics: { fontFamily: font.bodySemi, fontSize: 10.5, letterSpacing: 0.4, color: palette.muted, marginTop: 2 },
-  cardCode: { fontFamily: font.bodySemi, fontSize: 10.5, letterSpacing: 1.6, textTransform: 'uppercase' },
-  cardTitle: { fontFamily: font.bodySemi, fontSize: 14, lineHeight: 20, color: palette.text },
+  cardMetrics: { fontFamily: font.bodySemi, fontSize: 12, letterSpacing: 0.4, color: palette.muted, marginTop: 2 },
+  cardCode: { fontFamily: font.bodySemi, fontSize: 12, letterSpacing: 1.6, textTransform: 'uppercase' },
+  cardTitle: { fontFamily: font.bodySemi, fontSize: 14.5, lineHeight: 23, color: palette.text },
   cardSide: { justifyContent: 'space-between', alignItems: 'flex-end' },
   trash: {
     width: 26,
@@ -203,9 +203,9 @@ const styles = StyleSheet.create({
     borderColor: palette.rose + '55',
     gap: 10,
   },
-  confirmText: { fontFamily: font.body, fontSize: 13, color: palette.textSoft },
+  confirmText: { fontFamily: font.body, fontSize: 13.5, color: palette.textSoft },
   confirmGhost: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: radius.pill, backgroundColor: 'rgba(255,255,255,0.06)' },
-  confirmGhostText: { fontFamily: font.bodySemi, fontSize: 12, color: palette.textSoft },
+  confirmGhostText: { fontFamily: font.bodySemi, fontSize: 13, color: palette.textSoft },
   confirmDanger: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: radius.pill },
-  confirmDangerText: { fontFamily: font.bodySemi, fontSize: 12, color: palette.ink },
+  confirmDangerText: { fontFamily: font.bodySemi, fontSize: 13, color: palette.ink },
 });

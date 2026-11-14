@@ -122,7 +122,7 @@ const styles = StyleSheet.create({
   },
   captionIndex: {
     fontFamily: font.bodySemi,
-    fontSize: 10.5,
+    fontSize: 12,
     letterSpacing: 1.6,
   },
   captionDot: {
@@ -132,7 +132,7 @@ const styles = StyleSheet.create({
   },
   captionName: {
     fontFamily: font.bodySemi,
-    fontSize: 10.5,
+    fontSize: 12,
     letterSpacing: 1.6,
     color: palette.muted,
     textTransform: 'uppercase',

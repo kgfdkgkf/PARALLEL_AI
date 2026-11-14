@@ -283,7 +283,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   identity: { flexDirection: 'row', alignItems: 'center', gap: 16, paddingTop: 8 },
-  name: { fontFamily: font.display, fontSize: 22, lineHeight: 32, letterSpacing: -0.5, color: palette.text },
+  name: { fontFamily: font.display, fontSize: 22, lineHeight: 36, letterSpacing: -0.5, color: palette.text },
   bondRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6 },
   bondTrack: { flex: 1, height: 2, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.1)' },
   bondFill: { height: 2, borderRadius: 2 },
@@ -296,8 +296,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 10,
   },
-  quoteMark: { fontFamily: font.display, fontSize: 26, lineHeight: 28, marginTop: -4 },
-  quote: { flex: 1, fontFamily: font.body, fontSize: 14, lineHeight: 22, color: palette.textSoft, fontStyle: 'italic' },
+  quoteMark: { fontFamily: font.display, fontSize: 26, lineHeight: 32, marginTop: -4 },
+  quote: { flex: 1, fontFamily: font.body, fontSize: 14.5, lineHeight: 25, color: palette.textSoft, fontStyle: 'italic' },
   factGrid: { flexDirection: 'row', gap: 10 },
   factCell: {
     flex: 1,
@@ -308,7 +308,7 @@ const styles = StyleSheet.create({
     borderColor: palette.lineSoft,
     gap: 6,
   },
-  factText: { fontFamily: font.body, fontSize: 13, lineHeight: 18, color: palette.textSoft },
+  factText: { fontFamily: font.body, fontSize: 13.5, lineHeight: 21, color: palette.textSoft },
   secretCell: {
     padding: 13,
     borderRadius: radius.md,
@@ -325,7 +325,7 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     gap: 6,
   },
-  bubbleText: { fontFamily: font.body, fontSize: 13.5, lineHeight: 20, color: palette.textSoft },
+  bubbleText: { fontFamily: font.body, fontSize: 14, lineHeight: 23, color: palette.textSoft },
   bubbleSound: { alignSelf: 'flex-end', opacity: 0.7 },
   inputBar: {
     paddingHorizontal: 16,
@@ -344,11 +344,11 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: palette.line,
     fontFamily: font.body,
-    fontSize: 14.5,
+    fontSize: 15,
     color: palette.text,
   },
   sendButton: { width: 46, height: 46, borderRadius: 46, alignItems: 'center', justifyContent: 'center' },
-  disclaimer: { fontFamily: font.body, fontSize: 10.5, color: palette.faint, marginTop: 8, textAlign: 'center' },
+  disclaimer: { fontFamily: font.body, fontSize: 12, color: palette.faint, marginTop: 8, textAlign: 'center' },
   promptChip: {
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -358,5 +358,5 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.04)',
     maxWidth: 240,
   },
-  promptText: { fontFamily: font.body, fontSize: 12.5, color: palette.textSoft },
+  promptText: { fontFamily: font.body, fontSize: 13, color: palette.textSoft },
 });
