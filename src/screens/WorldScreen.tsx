@@ -11,7 +11,7 @@ import { CharacterPortrait, LocationArt } from '../components/Portraits';
 import { MapSheet, WorldMap } from '../components/WorldMap';
 import { DeityOrb } from '../components/DeityOrb';
 import { MetricBars, MetricRadar, describeMetrics } from '../components/Metrics';
-import { Divider, Glass, Icon, IconButton, ModeBadge, Mono, Overline, Pill, PressableScale, PrimaryButton, Reveal, SectionLabel } from '../components';
+import { Divider, GhostButton, Glass, Icon, IconButton, ModeBadge, Mono, Overline, Pill, PressableScale, PrimaryButton, Reveal, SectionLabel } from '../components';
 import { TOTAL_DECISIONS } from '../engine/events';
 import {
   DIVINE_BLESS_COST,
@@ -22,8 +22,11 @@ import {
   divineKindLabel,
   faithOf,
   pendingDivine,
+  POWERS,
+  powerTargets,
+  usedPower,
 } from '../engine/divine';
-import type { Location, Universe } from '../engine/types';
+import type { DivinePower, Location, Universe } from '../engine/types';
 import { accents, covers, fillImage, font, palette, radius, space } from '../theme';
 import type { ParallelStore } from '../state/useParallel';
 
@@ -512,7 +515,9 @@ const styles = StyleSheet.create({
     gap: 3,
   },
   godActionOff: { opacity: 0.4 },
-  godActionTitle: { fontFamily: font.bodySemi, fontSize: 13.5 },
+  godActionTitle: { fontFamily: font.bodySemi, fontSize: 13.5, color: palette.text },
+  powerRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  powerChip: { borderWidth: StyleSheet.hairlineWidth, borderColor: palette.line, borderRadius: radius.pill, paddingHorizontal: 11, paddingVertical: 9 },
   godActionEffect: { fontFamily: font.mono, fontSize: 11, color: palette.faint },
   godEmpty: {
     padding: 16,
@@ -694,6 +699,13 @@ const styles = StyleSheet.create({
 
 
 function GodTab({ universe, store }: { universe: Universe; store: ParallelStore }) {
+  const [power, setPower] = useState<DivinePower>('inspire');
+  const [targetId, setTargetId] = useState<string | null>(null);
+  const targets = powerTargets(universe, power);
+  const target = targets.find((item) => item.id === targetId);
+  const selectedPower = POWERS[power];
+  const powerUsed = usedPower(universe);
+  const protectedPlace = universe.state.locations.find((place) => place.id === universe.state.life?.protectedLocationId);
   const pending = pendingDivine(universe);
   const faith = faithOf(universe.state);
   const journal = divineJournal(universe.state);
@@ -706,8 +718,7 @@ function GodTab({ universe, store }: { universe: Universe; store: ParallelStore 
         <Overline color={palette.violetHi}>вы — бог этой вселенной</Overline>
         <Text style={styles.godName}>{deityOf(universe)}</Text>
         <Text style={styles.godHint}>
-          Мир слышит вас, пока в вас верят. Милость стоит {DIVINE_BLESS_COST} веры, кара — {DIVINE_CURSE_COST}. Каждое решение мира
-          добавляет веры.
+          За решения и прожитые дни вера возвращается. Между двумя решениями можно ответить на одно знамение и применить одну силу.
         </Text>
         <View style={styles.faithRow}>
           <View style={styles.faithTrack}>
@@ -759,10 +770,46 @@ function GodTab({ universe, store }: { universe: Universe; store: ParallelStore 
       ) : (
         <View style={styles.godEmpty}>
           <Text style={styles.godHint}>
-            Вы уже ответили на знамение этого хода. Следующее придёт после следующего решения.
+            {universe.state.ending ? 'Эта линия завершена.' : 'Следующее знамение придёт после решения в мире.'}
           </Text>
         </View>
       )}
+
+      {!universe.state.ending ? (
+        <View style={[styles.godCard, { borderColor: palette.line }]}>
+          <SectionLabel accent="cyan">силы бога</SectionLabel>
+          <View style={styles.powerRow}>
+            {(Object.keys(POWERS) as DivinePower[]).map((id) => (
+              <PressableScale key={id} onPress={() => { setPower(id); setTargetId(null); }}>
+                <View style={[styles.powerChip, power === id && { borderColor: accents[POWERS[id].accent].hi }]}>
+                  <Text style={styles.godActionTitle}>{POWERS[id].title}</Text>
+                </View>
+              </PressableScale>
+            ))}
+          </View>
+          <Text style={styles.godText}>{selectedPower.text} Цена — {selectedPower.cost} веры.</Text>
+          {protectedPlace ? <Mono color={palette.cyan}>оберег · {protectedPlace.name}</Mono> : null}
+          {powerUsed ? <Text style={styles.godHint}>Новая сила доступна после следующего решения.</Text> : (
+            <>
+              <View style={styles.powerRow}>
+                {targets.map((item) => (
+                  <PressableScale key={item.id} onPress={() => setTargetId(item.id)}>
+                    <View style={[styles.powerChip, targetId === item.id && { borderColor: accents[selectedPower.accent].hi }]}>
+                      <Text style={styles.godActionTitle}>{item.name}</Text>
+                    </View>
+                  </PressableScale>
+                ))}
+              </View>
+              {targets.length === 0 ? <Text style={styles.godHint}>Сейчас нет подходящей цели.</Text> : null}
+              <GhostButton
+                title="Применить силу" icon="spark" accent={selectedPower.accent} compact
+                disabled={!target || faith < selectedPower.cost}
+                onPress={() => { if (target) store.performPower(power, target.id); }}
+              />
+            </>
+          )}
+        </View>
+      ) : null}
 
       <View>
         <SectionLabel accent="violet">журнал бога</SectionLabel>
@@ -770,8 +817,8 @@ function GodTab({ universe, store }: { universe: Universe; store: ParallelStore 
           <View style={{ gap: 10 }}>
             {journal.map((event) => (
               <View key={event.id} style={styles.journalRow}>
-                <Pill accent={event.resolved === 'bless' ? 'green' : 'rose'}>
-                  {event.resolved === 'bless' ? 'милость' : 'кара'}
+                <Pill accent={event.power ? POWERS[event.power].accent : event.resolved === 'bless' ? 'green' : 'rose'}>
+                  {event.power ? 'сила' : event.resolved === 'bless' ? 'милость' : 'кара'}
                 </Pill>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.journalTitle}>{event.title}</Text>

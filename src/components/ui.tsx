@@ -195,16 +195,18 @@ export function GhostButton({
   icon,
   accent = 'violet',
   compact,
+  disabled = false,
 }: {
   title: string;
   onPress: () => void;
   icon?: IconName;
   accent?: AccentKey;
   compact?: boolean;
+  disabled?: boolean;
 }) {
   const scheme = accents[accent];
   return (
-    <PressableScale onPress={onPress}>
+    <PressableScale onPress={onPress} disabled={disabled} style={disabled ? { opacity: 0.5 } : undefined}>
       <View
         style={[
           styles.ghost,

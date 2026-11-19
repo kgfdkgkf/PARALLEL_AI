@@ -5,7 +5,7 @@ import { advanceLife } from '../engine/life';
 import { createUniverse } from '../engine/generate';
 import { applyOption, buildDecision, rewindUniverse } from '../engine/events';
 import { exploreLocation, type Scene } from '../engine/explore';
-import { bless, curse } from '../engine/divine';
+import { bless, curse, useDivinePower } from '../engine/divine';
 import { greetingFor, replyToCharacter, suggestedQuestions } from '../engine/chat';
 import {
   AiError,
@@ -18,7 +18,7 @@ import {
 } from '../engine/ai';
 import { loadAiSettings, saveAiSettings } from '../engine/aiSettings';
 import { DEFAULT_SETTINGS, type AiSettings } from '../engine/providers';
-import type { AiStatus, ChatMessage, EngineMode, Outcome, Universe } from '../engine/types';
+import type { AiStatus, ChatMessage, DivinePower, EngineMode, Outcome, Universe } from '../engine/types';
 
 export type Screen =
   | 'home'
@@ -372,6 +372,13 @@ export function useParallel() {
     if (next) commit(next);
   }, [commit]);
 
+  const performPower = useCallback((power: DivinePower, targetId: string) => {
+    const universe = activeRef.current;
+    if (!universe) return;
+    const next = useDivinePower(universe, power, targetId);
+    if (next) commit(next);
+  }, [commit]);
+
   const rewind = useCallback(
     (nodeId: string) => {
       const universe = activeRef.current;
@@ -559,6 +566,7 @@ export function useParallel() {
     clearScene,
     blessDivine,
     curseDivine,
+    performPower,
     openCharacter,
     sendMessage,
     deleteWorld,

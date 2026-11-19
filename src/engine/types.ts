@@ -137,6 +137,8 @@ export type Ending = {
   accent: AccentKey;
 };
 
+export type DivinePower = 'inspire' | 'protect' | 'reveal';
+
 export type DivineEvent = {
   id: string;
   turn: number;
@@ -146,6 +148,8 @@ export type DivineEvent = {
   characterId?: string;
   characterName?: string;
   resolved?: 'bless' | 'curse';
+  power?: DivinePower;
+  cost?: number;
   result?: string;
 };
 
