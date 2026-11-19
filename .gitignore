@@ -8,6 +8,9 @@ web-build/
 .cache/
 .shots/
 *.apk
+*.aab
+*.apks
+*.ipa
 *.log
 .env
 .env.local
