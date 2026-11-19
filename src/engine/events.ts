@@ -2,6 +2,7 @@ import { clamp } from '../theme';
 import { hashString } from './hash';
 import { tickWorld } from './diary';
 import { makeNews } from './news';
+import { scenarioFor } from './scenarios';
 import { detectTheme, GENESIS_TEMPLATE, type Lexicon } from './themes';
 import type {
   BranchNode,
@@ -61,7 +62,7 @@ function templateOne(l: Lexicon, state: WorldState, characters: Character[]): { 
   const keeper = byStance(characters, 'control');
   return {
     title: 'Первый разлом',
-    context: `Прошло десять лет. ${l.institution} впервые фиксирует случай, который не предусмотрен ни одним законом: ${l.commodity} использовали не так, как предполагали авторы правила. Инцидент попадает в прессу. ${keeper.name} требует ясности, ${rebel.name} — чтобы исключение осталось исключением.`,
+    context: `${l.institution} впервые фиксирует случай, который не предусмотрен ни одним законом: ${l.commodity} использовали не так, как предполагали авторы правила. Инцидент попадает в прессу. ${keeper.name} требует ясности, ${rebel.name} — чтобы исключение осталось исключением.`,
     question: 'Что сделать с первым исключением?',
     options: [
       draft({
@@ -411,10 +412,84 @@ function templateSix(l: Lexicon, state: WorldState, characters: Character[]): { 
 
 const TEMPLATES = [templateOne, templateTwo, templateThree, templateFour, templateFive, templateSix];
 
+const LOCAL_DISPUTES = [
+  'Нужно решить, что делать до следующего испытания.',
+  'На все заявки хватит людей и оборудования только при общем графике.',
+  'Часть жителей осталась без доступа. Управы спорят, кто должен оплатить расширение.',
+  'Жители требуют независимой проверки. Пока она идёт, участники рискуют потерять свои договорённости.',
+  'Соседний район хочет перенять опыт. На повторение пилота выделили всего один сезон.',
+  'Районы готовят долгосрочный договор. Его условия будут действовать и после ухода нынешних руководителей.',
+];
+
+function groundedDecision(universe: Universe, index: number) {
+  const scenario = scenarioFor(universe.question);
+  const state = universe.state;
+  const location = state.locations[Math.min(index, state.locations.length - 1)];
+  const speaker = state.characters[index % state.characters.length];
+  const previous = universe.path.at(-1);
+  const subject = universe.mode === 'ai' ? location?.blurb ?? universe.rule : scenario.failure;
+  const context = [
+    `Правило мира — «${universe.rule}»`,
+    location && subject ? `Место действия — «${location.name}». ${subject.charAt(0).toUpperCase()}${subject.slice(1).replace(/[.!?]$/u, '')}.` : subject,
+    previous ? `После решения «${previous.optionTitle}» в хронике появилась запись «${previous.headline}».` : '',
+    speaker ? `Среди участников обсуждения — ${speaker.name}, ${speaker.role}.` : '',
+    LOCAL_DISPUTES[index],
+  ].filter(Boolean).join(' ');
+
+  return {
+    title: universe.mode === 'ai' && location ? `${scenario.disputes[index]} · ${location.name}` : scenario.disputes[index],
+    context,
+    question: index === TOTAL_DECISIONS - 1 ? 'Каким станет общий договор?' : 'Какой порядок действий ты предложишь?',
+    options: [
+      draft({
+        title: index === 5 ? 'Принять единый регламент' : 'Поручить решение городской службе',
+        detail: 'Назначить ответственных и ввести общий порядок проверки.',
+        cost: 'Меньше самостоятельности у районов',
+        intent: 'Свести риск разрозненных действий к минимуму',
+        stance: 'control',
+        effects: { order: 12, freedom: -8, trust: index < 3 ? 2 : -5 },
+        headline: 'У решения появился ответственный',
+        explanation: 'Служба берёт на себя координацию и публикует сроки. Районам придётся согласовывать собственные меры.',
+        ripple: ['Ресурсы распределяют по общему графику.', 'Часть местных инициатив уходит в очередь.'],
+        law: index === 5 ? 'Городские службы действуют по единому регламенту.' : undefined,
+        memory: `Дело «${scenario.disputes[index]}» передано городской службе.`,
+      }),
+      draft({
+        title: index === 5 ? 'Подписать договор районов' : 'Передать решение местным собраниям',
+        detail: 'Дать жителям открыто выбрать правила на местах и публиковать результаты.',
+        cost: 'Согласование займёт больше времени',
+        intent: 'Учесть условия разных районов',
+        stance: 'liberty',
+        effects: { freedom: 12, order: -7, trust: index < 3 ? 5 : 8 },
+        headline: 'У районов появились собственные правила',
+        explanation: 'Местные собрания договариваются с теми, кого коснутся перемены. Соседям приходится искать совместимые меры.',
+        ripple: ['В каждом районе можно запросить пересмотр.', 'Для общих ресурсов нужна отдельная договорённость.'],
+        law: index === 5 ? 'Районы вправе сами выбирать местные меры и обязаны обмениваться результатами.' : undefined,
+        memory: `Дело «${scenario.disputes[index]}» передано собраниям жителей.`,
+      }),
+      draft({
+        title: index === 5 ? 'Оставить договор открытым для пересмотра' : 'Сравнить решения на испытании',
+        detail: 'Испытать два подхода и заранее договориться, как измерить результат.',
+        cost: 'Понадобятся специалисты и общий резерв',
+        intent: 'Собрать доказательства до того, как масштабировать решение',
+        stance: 'transcend',
+        effects: { tech: 13, order: -4, trust: 3, freedom: 3 },
+        headline: 'Началось сравнительное испытание',
+        explanation: 'Два района пробуют разные подходы. Общая комиссия публикует измерения и решает, какие результаты можно повторить.',
+        ripple: ['Отчёты доступны жителям обоих районов.', 'Общий резерв временно закреплён за испытанием.'],
+        law: index === 5 ? 'Общий договор пересматривают по результатам открытых испытаний.' : undefined,
+        memory: `По делу «${scenario.disputes[index]}» запущено сравнительное испытание.`,
+      }),
+    ],
+  };
+}
+
 export function buildDecision(universe: Universe): Decision {
   const index = Math.min(universe.state.turn, TOTAL_DECISIONS - 1);
   const lexicon = lexiconOf(universe);
-  const source = TEMPLATES[index](lexicon, universe.state, universe.state.characters);
+  const source = universe.theme === 'genesis'
+    ? groundedDecision(universe, index)
+    : TEMPLATES[index](lexicon, universe.state, universe.state.characters);
   const decisionId = `${universe.id}-d${index + 1}`;
   return {
     id: decisionId,

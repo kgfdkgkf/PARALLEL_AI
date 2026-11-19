@@ -7,6 +7,7 @@ import { BrandMark } from '../components/Cover';
 import { Icon } from '../components/Icon';
 import { Divider, GhostButton, Mono, Overline, PressableScale, PrimaryButton, Reveal, SectionLabel } from '../components/ui';
 import { accents, font, palette, radius, space } from '../theme';
+import { isPlayableHypothesis } from '../engine/hypothesis';
 import type { ParallelStore } from '../state/useParallel';
 
 const SUGGESTIONS = [
@@ -32,7 +33,7 @@ export function CreateScreen({ store }: { store: ParallelStore }) {
   const [focused, setFocused] = useState(false);
   const scheme = accents.violet;
   const trimmed = value.trim();
-  const valid = trimmed.length >= 8;
+  const valid = isPlayableHypothesis(trimmed);
   const counter = useMemo(() => `${value.length}/180`, [value.length]);
 
   const submit = () => {
@@ -109,7 +110,7 @@ export function CreateScreen({ store }: { store: ParallelStore }) {
 
             <Reveal delay={200} style={{ marginTop: space.lg }}>
               <PrimaryButton title="СОЗДАТЬ РЕАЛЬНОСТЬ" icon="spark" onPress={submit} disabled={!valid} />
-              {!valid ? <Text style={styles.hint}>Минимум 8 символов — движку нужен смысл, а не набор букв.</Text> : null}
+              {!valid ? <Text style={styles.hint}>Опиши одно конкретное изменение, например «дождь идёт по расписанию».</Text> : null}
               <Text style={styles.engineHint}>
                 {store.engineMode === 'ai'
                   ? 'Сборка идёт через AI CORE: законы, история и жители пишутся моделью в реальном времени.'

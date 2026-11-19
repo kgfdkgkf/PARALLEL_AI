@@ -1,6 +1,8 @@
 import type { AccentKey } from '../theme';
 import { clamp } from '../theme';
 import { buildDecision } from './events';
+import { scenarioFor } from './scenarios';
+import { hypothesisText } from './hypothesis';
 import { hashString, mulberry32 } from './hash';
 import { varyUniverse } from './lexicon';
 import { buildGenesisPack } from './genesis';
@@ -152,7 +154,7 @@ function buildChronicle(pack: ThemePack, era: number): ChronicleEntry[] {
 export function createUniverse(question: string, mode: EngineMode = 'demo'): Universe {
   const detected = detectTheme(question);
   const pack = detected.id === 'genesis' ? buildGenesisPack(question) : detected;
-  const seed = hashString(`${question.toLowerCase()}::${pack.id}`);
+  const seed = hashString(`${hypothesisText(question).toLowerCase()}::${pack.id}`);
   const random = mulberry32(seed);
   const metricsBase = BASE_METRICS[pack.id];
 
@@ -301,7 +303,11 @@ export function createUniverse(question: string, mode: EngineMode = 'demo'): Uni
     path: [],
   };
 
-  const world = mode === 'demo' ? varyUniverse(universe) : universe;
+  const scenario = scenarioFor(question);
+  if (pack.id === 'genesis') {
+    universe.signature = { title: scenario.artifact, text: scenario.artifactUse };
+  }
+  const world = mode === 'demo' && pack.id !== 'genesis' ? varyUniverse(universe) : universe;
   world.state.pending = buildDecision(world);
   return world;
 }

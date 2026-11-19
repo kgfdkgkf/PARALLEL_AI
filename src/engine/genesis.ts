@@ -1,5 +1,7 @@
 import { dedupeCulture } from './culture';
 import { hashString, mulberry32 } from './hash';
+import { hypothesisText } from './hypothesis';
+import { scenarioFor } from './scenarios';
 import { GENESIS_TEMPLATE, type CastSeed, type LocationSeed, type ThemePack } from './themes';
 import type { CultureFact, Stance } from './types';
 
@@ -11,39 +13,6 @@ import type { CultureFact, Stance } from './types';
  * из пулов по seed вопроса и вплетает саму гипотезу в названия и тексты —
  * поэтому два разных вопроса дают заметно разные миры.
  */
-
-function cleanQuestion(question: string): string {
-  return question
-    .trim()
-    .replace(/\s+/g, ' ')
-    .replace(/^а?\s*что[,]?\s+если\s+(бы\s+)?/i, '')
-    .replace(/\?+$/, '')
-    .trim();
-}
-
-function shortTopic(core: string): string {
-  const words = core.split(' ').filter(Boolean);
-  const topic = words.slice(0, 4).join(' ');
-  return (topic.charAt(0).toUpperCase() + topic.slice(1)).slice(0, 42);
-}
-
-const LAW_CORE = [
-  'Правило действует буквально: это не метафора, а закон, который нельзя обойти.',
-  'Исключений нет. Есть только те, кто научился жить внутри правила.',
-];
-
-const LAW_POOL = [
-  'За нарушение отвечают не люди, а институты: так дешевле.',
-  'Дети рождаются уже внутри правила и не считают его странным.',
-  'Правило можно обсуждать, но нельзя отменить — так записано.',
-  'Тот, кто помнит «до», обязан молчать о преимуществах прошлого.',
-  'Вся экономика выросла вокруг ограничения: без него она рухнет.',
-  'Наука делится на две части: изучение правила и попытки его обойти.',
-  'Ритуал соблюдения важнее смысла: так проще проверять.',
-  'Каждый год Совет пересматривает правило и каждый год оставляет как есть.',
-  'Правило преподают в школе как природное явление, а не как решение людей.',
-  'Тот, кто публично сомневается в правиле, платит налог на сомнение.',
-];
 
 const PLACE_KINDS = ['Институт', 'Бюро', 'Площадь', 'Квартал', 'Музей', 'Станция'];
 const PLACE_GENERIC: LocationSeed[] = [
@@ -145,9 +114,9 @@ const FEAR_POOL = [
 ];
 
 const SECRET_POOL = [
-  'Нарушает правило каждый месяц и пока не попался.',
+  'Знает о неудачном испытании, которое исчезло из официального отчёта.',
   'Хранит бумаги, которые официально уничтожены.',
-  'Знает человека, который придумал правило, и молчит об этом.',
+  'Знает, что один район потерял доступ к помощи из-за ошибочной карты.',
   'Помогает тем, кого институт считает нарушителями.',
   'Однажды подписал документ, который изменил чужую жизнь, и не раскаивается.',
 ];
@@ -174,14 +143,26 @@ function take<T>(random: () => number, items: T[], count: number): T[] {
 }
 
 export function buildGenesisPack(question: string): ThemePack {
-  const core = cleanQuestion(question) || 'правило изменилось';
-  const topic = shortTopic(core);
+  const core = hypothesisText(question) || 'правило изменилось';
+  const topic = core.length <= 46 ? core : core.slice(0, 46).replace(/\s+\S*$/, '') + '…';
+  const scenario = scenarioFor(core);
+  const rule = core.charAt(0).toUpperCase() + core.slice(1) + '.';
   const random = mulberry32(hashString(`${question}:genesis`));
 
-  const laws = [...LAW_CORE.slice(0, 2), ...take(random, LAW_POOL, 3)];
-  laws[2] = `Правило «${topic}» пересказывают по-разному, но проверяют одинаково.`;
+  const laws = [
+    rule,
+    `Районные службы публикуют, как они приспособились: ${scenario.adaptation}.`,
+    'Школы один раз в год проводят учения по местному аварийному плану.',
+    'Жители вправе запросить исходные наблюдения, на которых основано решение районной службы.',
+    'Общие меры пересматривают после совместного испытания хотя бы в двух районах.',
+  ];
 
-  const places: LocationSeed[] = take(random, PLACE_GENERIC, 2);
+  const places: LocationSeed[] = [{
+    name: scenario.district,
+    kind: 'Квартал',
+    blurb: `Здесь первым заметили, к чему приводит новое условие: ${core}.`,
+    detail: `Именно здесь ${scenario.adaptation}. Теперь местные обсуждают, как быть дальше: ${scenario.failure}.`,
+  }, ...take(random, PLACE_GENERIC, 1)];
   const usedKinds = new Set(places.map((place) => place.kind));
   const namedKinds = PLACE_KINDS.filter((kind) => !usedKinds.has(kind)).slice(0, 3);
   namedKinds.forEach((kind) => {
@@ -213,7 +194,7 @@ export function buildGenesisPack(question: string): ThemePack {
     };
     const seed = map[kind];
     places.push({
-      name: `${kind} «${topic}»`,
+      name: `${kind} городских испытаний`,
       kind,
       blurb: seed.blurb,
       detail: seed.detail,
@@ -233,7 +214,7 @@ export function buildGenesisPack(question: string): ThemePack {
     const bio = pick(random, BIO_TEMPLATE)(topic);
     return {
       name: seed.name,
-      role: pick(random, ROLE_POOL),
+      role: index === 0 ? scenario.trade : pick(random, ROLE_POOL),
       age: 24 + Math.floor(random() * 38),
       bio,
       goal: pick(random, GOAL_POOL),
@@ -250,12 +231,12 @@ export function buildGenesisPack(question: string): ThemePack {
     {
       year: baseYear,
       title: 'Сдвиг',
-      text: `Правило «${topic}» перестаёт быть предположением. Первые недели никто не понимает, что произошло, кроме нескольких тысяч человек.`,
+      text: `Появляются первые свидетельства того, что мир изменился: ${core}. Несколько районов проводят независимые проверки.`,
     },
     {
       year: baseYear + 16,
       title: 'Адаптация',
-      text: 'Города перестраиваются под новую реальность. Появляется профессия, которой раньше не существовало, и запрет, который раньше казался смешным.',
+      text: `Первые меры становятся привычными: ${scenario.adaptation}.`,
     },
     {
       year: baseYear + 34,
@@ -265,7 +246,7 @@ export function buildGenesisPack(question: string): ThemePack {
     {
       year: baseYear + 58,
       title: 'Предел',
-      text: 'Общество доходит до края: следующий шаг изменит само правило — или окончательно его закрепит.',
+      text: `Общий порядок приходится пересмотреть после нового случая: ${scenario.failure}.`,
     },
   ];
 
@@ -277,9 +258,9 @@ export function buildGenesisPack(question: string): ThemePack {
     title,
     codename: 'СДВИГ',
     genre: 'Спекулятивная история',
-    era: baseYear + 58,
-    rule: `${core.charAt(0).toUpperCase()}${core.slice(1)}.`,
-    premise: `В ${baseYear} году мир проснулся в новой конфигурации: ${core.toLowerCase()}. Никто не запомнил самого дня — только слухи и четыре официальные версии случившегося. Спустя ${58} лет общество научилось жить внутри этого правила, но так и не научилось его понимать.`,
+    era: baseYear + 60,
+    rule,
+    premise: `В ${baseYear} году изменилось одно условие: ${core}. За шестьдесят лет люди смогли приспособиться: ${scenario.adaptation}. Теперь это решение проверяет новый случай: ${scenario.failure}.`,
     laws,
     locations: places.slice(0, 5),
     culture,

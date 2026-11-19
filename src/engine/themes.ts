@@ -1,3 +1,4 @@
+import { hypothesisText } from './hypothesis';
 import type { AccentKey, CoverId } from '../theme';
 import type { CultureFact, Stance, ThemeId } from './types';
 
@@ -37,7 +38,6 @@ export type Lexicon = {
 
 export type ThemePack = {
   id: ThemeId;
-  match: RegExp;
   accent: AccentKey;
   cover: CoverId;
   title: string;
@@ -57,7 +57,6 @@ export type ThemePack = {
 export const THEMES: ThemePack[] = [
   {
     id: 'truth',
-    match: /лг|правд|тайн|врут|секрет|мысл|честн|скрыт|обман/i,
     accent: 'violet',
     cover: 'citadel',
     title: 'МИР БЕЗ ТАЙНЫ',
@@ -191,7 +190,6 @@ export const THEMES: ThemePack[] = [
   },
   {
     id: 'time',
-    match: /врем|час|год|век|стар|молод|срок|минут|будущ|прошл/i,
     accent: 'gold',
     cover: 'memory',
     title: 'ВРЕМЯ КАК ВАЛЮТА',
@@ -323,7 +321,6 @@ export const THEMES: ThemePack[] = [
   },
   {
     id: 'memory',
-    match: /памят|помн|прошлы|жизн|реинкарн|забыт|вспомн|сны|сновиден/i,
     accent: 'cyan',
     cover: 'nebula',
     title: 'ПАМЯТЬ ПРОШЛЫХ ЖИЗНЕЙ',
@@ -452,7 +449,6 @@ export const THEMES: ThemePack[] = [
   },
   {
     id: 'fear',
-    match: /страх|боят|боязн|ужас|паник|риск|смелост|тревог/i,
     accent: 'rose',
     cover: 'islands',
     title: 'МИР БЕЗ СТРАХА',
@@ -580,7 +576,6 @@ export const THEMES: ThemePack[] = [
   },
   {
     id: 'ai',
-    match: /ии|искусственн|интеллект|машин|робот|алгоритм|нейросет|компьютер/i,
     accent: 'cyan',
     cover: 'neon',
     title: 'ВТОРОЙ РАЗУМ',
@@ -708,7 +703,6 @@ export const THEMES: ThemePack[] = [
   },
   {
     id: 'lives',
-    match: /жизн|бессмерт|смерт|втор|умир|душ|переселен|перерожд/i,
     accent: 'green',
     cover: 'crossroads',
     title: 'ДВЕ ЖИЗНИ',
@@ -838,7 +832,6 @@ export const THEMES: ThemePack[] = [
 
 export const GENESIS_TEMPLATE: Omit<ThemePack, 'id'> & { id: ThemeId } = {
   id: 'genesis',
-  match: /.*/,
   accent: 'violet',
   cover: 'nebula',
   title: 'НОВАЯ РЕАЛЬНОСТЬ',
@@ -948,10 +941,16 @@ export const GENESIS_TEMPLATE: Omit<ThemePack, 'id'> & { id: ThemeId } = {
   },
 };
 
+const AUTHORED_PREMISES: Partial<Record<ThemeId, RegExp>> = {
+  truth: /^(?:люди (?:никогда )?не уме(?:ли|ют) лгать|никто не (?:умеет|мог) лгать)$/u,
+  time: /^время можно (?:было )?(?:покупать|купить)$/u,
+  memory: /^люди помн(?:или|ят) (?:все )?(?:свои )?прошлые жизни$/u,
+  fear: /^(?:люди|никто) не испытыва(?:л|ли|ет|ют) страха$/u,
+  ai: /^(?:ии|искусственный интеллект) появил(?:ся|ось) (?:двести|200) лет назад$/u,
+  lives: /^у каждого (?:человека )?(?:было|есть) две жизни$/u,
+};
+
 export function detectTheme(question: string): ThemePack {
-  const normalized = question.toLowerCase();
-  for (const pack of THEMES) {
-    if (pack.match.test(normalized)) return pack;
-  }
-  return GENESIS_TEMPLATE as ThemePack;
+  const premise = hypothesisText(question).toLowerCase().replace(/ё/g, 'е');
+  return THEMES.find((pack) => AUTHORED_PREMISES[pack.id]?.test(premise)) ?? GENESIS_TEMPLATE;
 }
