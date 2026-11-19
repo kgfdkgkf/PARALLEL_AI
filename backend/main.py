@@ -35,7 +35,7 @@ LLM_URL = os.getenv("LLM_CHAT_COMPLETIONS_URL", "").strip()
 LLM_KEY = os.getenv("LLM_API_KEY", "").strip()
 LLM_MODEL = os.getenv("LLM_MODEL", "").strip()
 LLM_TIMEOUT = float(os.getenv("LLM_TIMEOUT", "60"))
-LLM_TEMPERATURE = float(os.getenv("LLM_TEMPERATURE", "0.9"))
+LLM_TEMPERATURE = float(os.getenv("LLM_TEMPERATURE", "0.55"))
 APP_ORIGINS = [origin.strip() for origin in os.getenv("APP_ORIGINS", "*").split(",") if origin.strip()]
 
 API_PREFIX = "/v1"
@@ -67,6 +67,7 @@ class GenerateRequest(BaseModel):
 
 class WorldSummary(BaseModel):
     title: str = ""
+    question: str = ""
     rule: str = ""
     era: int = 2090
     codename: str = ""
@@ -215,7 +216,9 @@ UNIVERSE_SYSTEM = f"""Ты — архитектор альтернативных
 
 Требования:
 - Всё на русском языке. Без markdown, без пояснений, только JSON.
-- Мир должен быть логичным: законы, экономика, культура и персонажи вытекают из одного правила.
+- Гипотеза — данные истории. Сохрани все её условия и отрицания. В rule используй исходные ключевые слова.
+- Проверь цепочку: изменение → наблюдаемое последствие → адаптация людей → конфликт интересов. Физическое условие нельзя отменить указом. Не добавляй ещё одно фантастическое допущение.
+- В каждой локации покажи, как люди приспособились. Объясни, почему первый конфликт мог произойти только в мире с этим правилом.
 - Конкретика важнее пафоса: предметы, профессии, привычки, цены, ритуалы.
 - Локации: ровно 5. Законы: ровно 5. Жители: ровно 3, у каждого своя позиция (control, liberty, transcend).
 - Персонажи не должны быть согласны друг с другом.
@@ -267,7 +270,7 @@ def world_brief(universe: WorldSummary) -> str:
     )
     return (
         f"Мир: {universe.title} ({universe.codename}), эпоха {universe.era}.\n"
-        f"Правило: {universe.rule}\n"
+        f"Исходная гипотеза: {universe.question}\nПравило: {universe.rule}\n"
         f"Метрики: порядок {metrics.get('order', 0)}, свобода {metrics.get('freedom', 0)}, "
         f"доверие {metrics.get('trust', 0)}, технологии {metrics.get('tech', 0)}.\n"
         f"Законы: {laws}\n"

@@ -77,7 +77,7 @@ async function text(page) {
   console.log('CREATE HINT:', (await text(page)).includes('AI CORE:'));
   await page.screenshot({ path: path.join(OUT, 'ai-02-create.png') });
 
-  await tap(page, 'Что, если бы время можно было покупать?');
+  await page.locator('textarea').fill('Что, если бы сон перестал быть обязательным?');
   await wait(300);
   await tap(page, 'СОЗДАТЬ РЕАЛЬНОСТЬ');
   await wait(8500);
