@@ -622,6 +622,8 @@ export type UniverseBrief = {
   locations: string[];
   turn: number;
   chronicle: string[];
+  diary: string[];
+  artifacts: string[];
 };
 
 export function summarize(universe: Universe): UniverseBrief {
@@ -642,6 +644,8 @@ export function summarize(universe: Universe): UniverseBrief {
     })),
     locations: universe.state.locations.map((location) => location.name),
     turn: universe.state.turn,
+    diary: universe.state.life?.journal.slice(-4).map((entry) => `${entry.title}. ${entry.text}`) ?? [],
+    artifacts: universe.state.life?.artifacts.map((item) => item.title) ?? [],
     chronicle: universe.state.chronicle.slice(-8).map((entry) => `${entry.year}: ${entry.title}. ${entry.text.slice(0, 220)}`),
   };
 }
@@ -678,7 +682,7 @@ export async function nextDecisionAI(universe: Universe, settings: AiSettings): 
     `Жители: ${brief.characters.map((item) => `${item.name} (${item.role}, ${item.stance})`).join('; ')}\n` +
     `Места: ${brief.locations.join(', ')}\n` +
     `Память мира: ${brief.memory.join('; ')}\n` +
-    `Хроника: ${brief.chronicle.slice(-5).join(', ')}\n` +
+    `Хроника: ${brief.chronicle.slice(-5).join(', ')}\nДневник: ${brief.diary.join(' / ')}\nАртефакты: ${brief.artifacts.join(', ')}\n` +
     `Принято решений: ${brief.turn} из 6.\n` +
     `Придумай точку выбора номер ${brief.turn + 1}. Верни только JSON по схеме.`;
 

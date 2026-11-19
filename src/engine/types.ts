@@ -149,7 +149,25 @@ export type DivineEvent = {
   result?: string;
 };
 
+export type Artifact = {
+  id: string;
+  title: string;
+  description: string;
+  locationId: string;
+  day: number;
+};
+
+export type WorldLife = {
+  day: number;
+  lastAt: number;
+  journal: { day: number; title: string; text: string; accent: AccentKey }[];
+  threads: { title: string; detail: string; progress: number }[];
+  artifacts: Artifact[];
+  protectedLocationId?: string;
+};
+
 export type WorldState = {
+  life?: WorldLife;
   faith?: number;
   divine?: DivineEvent[];
   metrics: Metrics;

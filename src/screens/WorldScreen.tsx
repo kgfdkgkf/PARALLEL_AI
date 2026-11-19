@@ -3,6 +3,7 @@ import { Image, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Illustration, illustrationBrief } from '../components/Illustration';
+import { WorldJournal } from './WorldJournal';
 import { NarrationButton } from '../components/NarrationButton';
 import { Atmosphere } from '../components/Atmosphere';
 import { Signet } from '../components/Avatar';
@@ -26,13 +27,14 @@ import type { Location, Universe } from '../engine/types';
 import { accents, covers, fillImage, font, palette, radius, space } from '../theme';
 import type { ParallelStore } from '../state/useParallel';
 
-type TabKey = 'overview' | 'map' | 'people' | 'god' | 'chronicle';
+type TabKey = 'overview' | 'map' | 'people' | 'god' | 'journal' | 'chronicle';
 
-const TABS: { id: TabKey; label: string; icon: 'compass' | 'map' | 'people' | 'timeline' | 'spark' }[] = [
+const TABS: { id: TabKey; label: string; icon: 'compass' | 'map' | 'people' | 'timeline' | 'spark' | 'eye' }[] = [
   { id: 'overview', label: 'Обзор', icon: 'compass' },
   { id: 'map', label: 'Карта', icon: 'map' },
   { id: 'people', label: 'Жители', icon: 'people' },
   { id: 'god', label: 'Бог', icon: 'spark' },
+  { id: 'journal', label: 'Дневник', icon: 'eye' },
   { id: 'chronicle', label: 'Хроника', icon: 'timeline' },
 ];
 
@@ -156,6 +158,7 @@ export function WorldScreen({ store }: { store: ParallelStore }) {
             {tab === 'people' ? <PeopleTab universe={universe} store={store} /> : null}
             {tab === 'god' ? <GodTab universe={universe} store={store} /> : null}
             {tab === 'chronicle' ? <ChronicleTab universe={universe} /> : null}
+            {tab === 'journal' ? <WorldJournal universe={universe} onObserve={store.observeDay} /> : null}
           </View>
         </ScrollView>
 
@@ -367,6 +370,7 @@ function MapTab({ universe, store }: { universe: Universe; store: ParallelStore 
           <Overline color={accents[scene.accent].text}>{scene.locationName}</Overline>
           <Text style={styles.sceneTitle}>{scene.title}</Text>
           <Text style={styles.sceneText}>{scene.text}</Text>
+          {scene.artifact ? <Pill accent="gold">Найдено: {scene.artifact.title}</Pill> : null}
           <NarrationButton text={scene.title + '. ' + scene.text} label="Озвучить сцену" accent={scene.accent} />
           <View style={styles.sceneFoot}>
             <Pill accent={scene.accent}>{scene.effectLabel}</Pill>
@@ -391,7 +395,7 @@ function MapTab({ universe, store }: { universe: Universe; store: ParallelStore 
               {fallback}
             </Illustration>
           )}
-          onExplore={() => store.explore(location.id)}
+          onExplore={universe.state.ending ? undefined : () => store.explore(location.id)}
           explored={location.visitedTurn === universe.state.turn}
         />
       ) : null}
@@ -463,7 +467,7 @@ function ChronicleTab({ universe }: { universe: Universe }) {
               <View style={[styles.timelineBody, emphasis && { borderColor: scheme.core + '3A' }]}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
                   <Overline color={scheme.text}>{entry.label}</Overline>
-                  <Mono>{entry.year}</Mono>
+                  <Mono>{entry.year || universe.era + entry.turn * 4}</Mono>
                 </View>
                 <Text style={styles.timelineTitle}>{entry.title}</Text>
                 <Text style={styles.timelineText}>{entry.text}</Text>

@@ -428,10 +428,12 @@ function groundedDecision(universe: Universe, index: number) {
   const speaker = state.characters[index % state.characters.length];
   const previous = universe.path.at(-1);
   const subject = universe.mode === 'ai' ? location?.blurb ?? universe.rule : scenario.failure;
+  const activeThread = state.life?.threads.find((thread) => thread.progress > 0 && thread.progress < 3);
   const context = [
     `Правило мира — «${universe.rule}»`,
     location && subject ? `Место действия — «${location.name}». ${subject.charAt(0).toUpperCase()}${subject.slice(1).replace(/[.!?]$/u, '')}.` : subject,
     previous ? `После решения «${previous.optionTitle}» в хронике появилась запись «${previous.headline}».` : '',
+    activeThread ? `Жители параллельно ведут дело «${activeThread.title}».` : '',
     speaker ? `Среди участников обсуждения — ${speaker.name}, ${speaker.role}.` : '',
     LOCAL_DISPUTES[index],
   ].filter(Boolean).join(' ');

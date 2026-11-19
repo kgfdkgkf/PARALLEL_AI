@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { AppState } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { advanceLife } from '../engine/life';
 import { createUniverse } from '../engine/generate';
 import { applyOption, buildDecision, rewindUniverse } from '../engine/events';
 import { exploreLocation, type Scene } from '../engine/explore';
@@ -262,7 +264,7 @@ export function useParallel() {
       }
       const generated = await aiRequest;
       if (token !== forgeToken.current) return;
-      const universe = generated ?? createUniverse(clean);
+      const universe = advanceLife(generated ?? createUniverse(clean));
       if (generated) setAiStatus('online');
       const first = universe.state.characters[0];
       commit(universe);
@@ -283,14 +285,15 @@ export function useParallel() {
 
   const openWorld = useCallback(
     (universe: Universe) => {
-      activeRef.current = universe;
-      setActive(universe);
+      const refreshed = advanceLife(universe);
+      commit(refreshed);
+      setScene(null);
       setSelectedLocationId(universe.state.locations[0]?.id ?? null);
       setSelectedCharacterId(universe.state.characters[0]?.id ?? null);
       setOutcome(null);
       go('world');
     },
-    [go],
+    [commit, go],
   );
 
   const choose = useCallback(
@@ -330,6 +333,29 @@ export function useParallel() {
     [commit],
   );
 
+  const refreshLife = useCallback((observe = false) => {
+    const universe = activeRef.current;
+    if (!universe) return;
+    const next = advanceLife(universe, Date.now(), observe);
+    if (next !== universe) commit(next);
+  }, [commit]);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    refreshLife();
+    const timer = setInterval(() => {
+      if (AppState.currentState !== 'background') refreshLife();
+    }, 15000);
+    const listener = AppState.addEventListener('change', (state) => {
+      if (state === 'active') refreshLife();
+    });
+    return () => {
+      clearInterval(timer);
+      listener.remove();
+    };
+  }, [hydrated, refreshLife]);
+
+  const observeDay = useCallback(() => refreshLife(true), [refreshLife]);
   const clearScene = useCallback(() => setScene(null), []);
 
   const blessDivine = useCallback(() => {
@@ -529,6 +555,7 @@ export function useParallel() {
     rewind,
     scene,
     explore,
+    observeDay,
     clearScene,
     blessDivine,
     curseDivine,

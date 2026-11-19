@@ -84,6 +84,8 @@ class WorldSummary(BaseModel):
     locations: list[str] = Field(default_factory=list)
     turn: int = 0
     chronicle: list[str] = Field(default_factory=list)
+    diary: list[str] = Field(default_factory=list)
+    artifacts: list[str] = Field(default_factory=list)
 
 
 class DecisionRequest(BaseModel):
@@ -284,6 +286,8 @@ def world_brief(universe: WorldSummary) -> str:
         f"Места: {', '.join(universe.locations[:6])}\n"
         f"Память мира: {memory}\n"
         f"Хроника: {', '.join(universe.chronicle[-6:])}\n"
+        f"Дневник: {', '.join(universe.diary[-4:])}\n"
+        f"Артефакты: {', '.join(universe.artifacts[:5])}\n"
         f"Принято решений: {universe.turn} из {TOTAL_DECISIONS}."
     )
 

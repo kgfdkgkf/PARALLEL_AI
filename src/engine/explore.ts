@@ -1,6 +1,7 @@
 import { clamp, type AccentKey } from '../theme';
+import { collectArtifact, findArtifact } from './life';
 import { hashString } from './hash';
-import type { ChronicleEntry, Metrics, Universe } from './types';
+import type { Artifact, ChronicleEntry, Metrics, Universe } from './types';
 
 export type Scene = {
   title: string;
@@ -11,6 +12,7 @@ export type Scene = {
   accent: AccentKey;
   locationName: string;
   locationId: string;
+  artifact?: Artifact;
 };
 
 type SceneTemplate = {
@@ -124,17 +126,26 @@ function templatesFor(kind: string): SceneTemplate[] {
 
 export function exploreLocation(universe: Universe, locationId: string): { universe: Universe; scene: Scene } | null {
   const location = universe.state.locations.find((item) => item.id === locationId);
-  if (!location || !location.unlocked) return null;
+  if (!location || !location.unlocked || universe.state.ending) return null;
   if (location.visitedTurn === universe.state.turn) return null;
 
-  const seed = hashString(`${universe.id}:${location.id}:${universe.state.turn}`);
+  const seed = hashString(`${universe.seed}:${location.id}:${universe.state.turn}`);
   const person = universe.state.characters[seed % Math.max(1, universe.state.characters.length)];
   const law = universe.state.laws[seed % Math.max(1, universe.state.laws.length)]?.text ?? universe.rule;
   const variants = templatesFor(location.kind);
   const template = variants[seed % variants.length];
 
-  const next: Universe = JSON.parse(JSON.stringify(universe)) as Universe;
-  next.state.metrics[template.metric] = clamp(next.state.metrics[template.metric] + template.delta);
+  const artifact = findArtifact(universe, location);
+  const current = artifact ? collectArtifact(universe, artifact) : universe;
+  const next: Universe = { ...current, state: {
+    ...current.state,
+    metrics: { ...current.state.metrics },
+    memory: [...current.state.memory],
+    chronicle: [...current.state.chronicle],
+  } };
+  const before = next.state.metrics[template.metric];
+  next.state.metrics[template.metric] = clamp(before + template.delta);
+  const delta = next.state.metrics[template.metric] - before;
   next.state.locations = next.state.locations.map((item) =>
     item.id === location.id ? { ...item, visitedTurn: next.state.turn } : item,
   );
@@ -179,12 +190,13 @@ export function exploreLocation(universe: Universe, locationId: string): { unive
     scene: {
       title: template.title,
       text,
-      effectLabel: `${template.delta > 0 ? '+' : ''}${template.delta} ${metricLabel[template.metric]}`,
+      effectLabel: delta ? `${delta > 0 ? '+' : ''}${delta} ${metricLabel[template.metric]}` : 'Показатели без изменений',
       metric: template.metric,
-      delta: template.delta,
+      delta,
       accent: location.accent,
       locationName: location.name,
       locationId: location.id,
+      artifact: artifact ?? undefined,
     },
   };
 }
