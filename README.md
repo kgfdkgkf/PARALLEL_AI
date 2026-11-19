@@ -64,7 +64,7 @@
 Нужен Node.js 22+ (проверено на 24.21) и телефон с Expo Go либо браузер.
 
 ```powershell
-cd "C:\Users\arosl\Desktop\колледж\Креативное поколение\PARALLEL"
+cd "папка проекта"
 npm install
 npx expo start
 ```
