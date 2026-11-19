@@ -112,9 +112,10 @@ export type AiSettings = {
 
 const ENV_PROVIDER = (process.env.EXPO_PUBLIC_AI_PROVIDER ?? '').trim() as ProviderId;
 const ENV_MODEL = (process.env.EXPO_PUBLIC_AI_MODEL ?? '').trim();
+const bundledGroqKey = (process.env.EXPO_PUBLIC_GROQ_KEY ?? '').trim();
 
 export const DEFAULT_SETTINGS: AiSettings = {
-  provider: Object.hasOwn(PROVIDERS, ENV_PROVIDER) ? ENV_PROVIDER : 'demo',
+  provider: Object.hasOwn(PROVIDERS, ENV_PROVIDER) ? ENV_PROVIDER : bundledGroqKey ? 'groq' : 'demo',
   key: '',
   model: ENV_MODEL,
   imageServer: '',
@@ -139,10 +140,22 @@ export function modelOf(settings: AiSettings): string {
   return (settings.model || provider.model).trim();
 }
 
+export function chatEndpoint(settings: AiSettings): string {
+  return process.env.EXPO_PUBLIC_AI_BASE_URL?.trim() || providerOf(settings).baseUrl;
+}
+
+export function hasBundledGroqKey(settings: AiSettings): boolean {
+  return settings.provider === 'groq' && bundledGroqKey.length > 8 && chatEndpoint(settings) === PROVIDERS.groq.baseUrl;
+}
+
+export function chatKey(settings: AiSettings): string {
+  return settings.key.trim() || (hasBundledGroqKey(settings) ? bundledGroqKey : '');
+}
+
 export function isAiReady(settings: AiSettings, backendUrl: string): boolean {
   const provider = providerOf(settings);
   if (provider.id === 'demo') return false;
   if (provider.id === 'backend') return backendUrl.length > 0;
   if (provider.id === 'local') return true;
-  return settings.key.trim().length > 8;
+  return chatKey(settings).length > 8;
 }

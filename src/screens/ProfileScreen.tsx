@@ -5,7 +5,7 @@ import { Atmosphere } from '../components/Atmosphere';
 import { BottomNav } from '../components/BottomNav';
 import { Signet } from '../components/Avatar';
 import { Divider, GhostButton, Icon, Mono, Overline, Pill, PressableScale, Reveal, SectionLabel } from '../components';
-import { MODEL_PRESETS, PROVIDERS, type ProviderId } from '../engine/providers';
+import { hasBundledGroqKey, MODEL_PRESETS, PROVIDERS, type ProviderId } from '../engine/providers';
 import { accents, font, palette, radius } from '../theme';
 import type { ParallelStore } from '../state/useParallel';
 
@@ -171,6 +171,9 @@ export function ProfileScreen({ store }: { store: ParallelStore }) {
                     <Text style={styles.aiSaved}>
                       Ключ сохранён на этом устройстве: ····{store.aiSettings.key.trim().slice(-4)}
                     </Text>
+                  ) : null}
+                  {!store.aiSettings.key.trim() && hasBundledGroqKey(store.aiSettings) ? (
+                    <Text style={styles.aiSaved}>Используется ключ Groq из сборки.</Text>
                   ) : null}
                   {presets.length > 0 ? (
                     <View style={styles.presetRow}>

@@ -39,6 +39,33 @@ const { decisionFromWire, universeFromWire } = require('../src/engine/ai');
 const gravity = 'Что, если бы гравитация зависела от памяти?';
 const rain = 'Что, если бы дождь шёл по расписанию?';
 
+test('a bundled Groq key selects Groq and stays scoped to its official endpoint', () => {
+  const path = require.resolve('../src/engine/providers');
+  const original = require.cache[path];
+  const names = ['EXPO_PUBLIC_GROQ_KEY', 'EXPO_PUBLIC_AI_PROVIDER', 'EXPO_PUBLIC_AI_BASE_URL'];
+  const previous = names.map((name) => process.env[name]);
+  try {
+    process.env.EXPO_PUBLIC_GROQ_KEY = 'test-bundled-key';
+    delete process.env.EXPO_PUBLIC_AI_PROVIDER;
+    delete process.env.EXPO_PUBLIC_AI_BASE_URL;
+    delete require.cache[path];
+    const { DEFAULT_SETTINGS, chatKey, isAiReady } = require(path);
+    assert.equal(DEFAULT_SETTINGS.provider, 'groq');
+    assert.equal(chatKey(DEFAULT_SETTINGS), 'test-bundled-key');
+    assert.equal(isAiReady(DEFAULT_SETTINGS, ''), true);
+    assert.equal(chatKey({ ...DEFAULT_SETTINGS, key: 'manual-test-key' }), 'manual-test-key');
+    assert.equal(chatKey({ ...DEFAULT_SETTINGS, provider: 'openrouter' }), '');
+    process.env.EXPO_PUBLIC_AI_BASE_URL = 'https://example.test/chat/completions';
+    assert.equal(chatKey(DEFAULT_SETTINGS), '');
+  } finally {
+    require.cache[path] = original;
+    names.forEach((name, index) => {
+      if (previous[index] === undefined) delete process.env[name];
+      else process.env[name] = previous[index];
+    });
+  }
+});
+
 test('a keyword cannot replace a custom hypothesis with an unrelated world', () => {
   const world = createUniverse(gravity);
   assert.equal(world.theme, 'genesis');

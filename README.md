@@ -86,6 +86,8 @@ npm.cmd run web
 
 В профиле выберите провайдера, введите ключ и нажмите «Проверить связь». Можно задать идентификатор модели вручную.
 
+В локальной сборке можно сделать Groq провайдером по умолчанию. Создайте игнорируемый файл `.env.local` и задайте `EXPO_PUBLIC_GROQ_KEY`. Ключ входит в APK и веб-сборку, его можно извлечь из клиентского пакета. Для сборок с этим ключом выбирайте локальное использование. Для публичного размещения используйте сервер и храните ключ в его окружении.
+
 - Gemini через [Google AI Studio](https://aistudio.google.com/docs/models)
 - Groq через [Groq Console](https://console.groq.com/docs/models)
 - OpenRouter через [Free Models Router](https://openrouter.ai/openrouter/free)

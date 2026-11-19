@@ -16,7 +16,7 @@ import { anchorMatches, hypothesisText, premiseAnchors } from './hypothesis';
 import { newWorldId } from './worldId';
 import { dedupeCulture } from './culture';
 import { hashString, mulberry32 } from './hash';
-import { isAiReady, modelOf, providerOf, type AiSettings } from './providers';
+import { chatEndpoint, chatKey, isAiReady, modelOf, providerOf, type AiSettings } from './providers';
 import type {
   Character,
   ChronicleEntry,
@@ -105,7 +105,7 @@ function contentOf(payload: unknown): string {
 
 async function directChat(settings: AiSettings, system: string, user: string, options: ChatOptions): Promise<string> {
   const provider = providerOf(settings);
-  const key = settings.key.trim();
+  const key = chatKey(settings);
   if (provider.needsKey && key.length < 8) {
     throw new AiError(`Для ${provider.label} нужен ключ. Профиль → AI-ядро → вставить ключ.`);
   }
@@ -122,7 +122,7 @@ async function directChat(settings: AiSettings, system: string, user: string, op
 
   const timeout = withTimeout(options.timeoutMs);
   try {
-    const endpoint = process.env.EXPO_PUBLIC_AI_BASE_URL || provider.baseUrl;
+    const endpoint = chatEndpoint(settings);
     // бесплатные тарифы часто отвечают 429 — даём модели второй и третий шанс
     for (let attempt = 0; attempt < 3; attempt += 1) {
       const response = await fetch(endpoint, {
