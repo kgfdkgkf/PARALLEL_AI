@@ -195,7 +195,7 @@ DECISION = {
 def answer(body: dict) -> str:
     messages = body.get("messages") or []
     system = " ".join(str(item.get("content", "")) for item in messages if item.get("role") == "system").lower()
-    if "проверяешь соединение" in system or "проверк" in system:
+    if "проверяешь соединение" in system:
         return json.dumps({"ok": True}, ensure_ascii=False)
     if "архитектор альтернативных вселенных" in system:
         return json.dumps(WORLD, ensure_ascii=False)

@@ -94,7 +94,7 @@ async function tapSelector(page, selector) {
   await wait(900);
   await tap(page, 'СОЗДАТЬ ВСЕЛЕННУЮ');
   await wait(900);
-  await tap(page, 'случайная');
+  await page.locator('textarea').fill('Что, если бы тишина стала платным ресурсом?');
   await wait(600);
   await tap(page, 'СОЗДАТЬ РЕАЛЬНОСТЬ');
   await wait(2200);

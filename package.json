@@ -11,6 +11,8 @@
     "build:web": "expo export --platform web --output-dir dist",
     "mock:ai": "python tools/mock_api.py",
     "typecheck": "node tools/ensure-env.js && tsc --noEmit",
+    "test": "node --test tools/engine.test.cjs",
+    "test:web": "node tools/web-smoke.cjs",
     "check:env": "node tools/ensure-env.js"
   },
   "dependencies": {
