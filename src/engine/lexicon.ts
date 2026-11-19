@@ -81,23 +81,21 @@ function reseed(base: number, index: number, salt = 0): number {
 
 /**
  * Переименовывает сущности демо-мира: локации, жителей, часть законов.
- * Вызывается только для локального движка, чтобы каждый прогон давал новый мир.
+ * Имена воспроизводимы для одной и той же гипотезы.
  */
 export function varyUniverse(universe: Universe): Universe {
-  const base = hashString(`vary:${universe.id}`);
+  const base = hashString(`vary:${universe.seed}`);
   const locations = universe.state.locations.map((location: Location, index: number) => ({
     ...location,
     name: makePlaceName(reseed(base, index)),
   }));
-  const locationName = new Map(universe.state.locations.map((location, index) => [location.id, locations[index].name]));
   const characters = universe.state.characters.map((character: Character, index: number) => ({
     ...character,
     name: makeCharacterName(reseed(base, index, 3)),
-    home: character.home,
   }));
   const laws = universe.state.laws.map((law, index) =>
     index % 2 === 0
-      ? { ...law, id: law.id, title: makeLawTitle(reseed(base, index, 7)) }
+      ? { ...law, title: makeLawTitle(reseed(base, index, 7)) }
       : law,
   );
   return {
@@ -106,7 +104,7 @@ export function varyUniverse(universe: Universe): Universe {
       ...universe.state,
       locations,
       characters,
-      laws: universe.state.laws.map((law, index) => (index % 2 === 0 ? laws[index] : law)),
+      laws,
     },
   };
 }

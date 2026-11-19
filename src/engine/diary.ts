@@ -90,7 +90,7 @@ export function tickWorld(universe: Universe): Universe {
   const turn = state.turn;
   if (state.chronicle.some((entry) => entry.id === `diary-${turn}-0`)) return universe;
 
-  const seed = hashString(`tick:${universe.id}:${turn}`);
+  const seed = hashString(`tick:${universe.seed}:${turn}`);
   const random = mulberry32(seed);
   const character = state.characters.length ? pick(state.characters, random) : undefined;
   const location = state.locations.length ? pick(state.locations, random) : undefined;
@@ -100,7 +100,7 @@ export function tickWorld(universe: Universe): Universe {
   const entries: ChronicleEntry[] = [
     {
       id: `diary-${turn}-0`,
-      year: universe.era + turn,
+      year: universe.era + turn * 4,
       label: 'дневник',
       title: 'Мир живёт без тебя',
       text: `${pick(OPENINGS, random)} ${location ? location.name : 'Город'} — ${pick(EVENTS, random)} ${pick(REACTIONS, random)}`,
@@ -110,7 +110,7 @@ export function tickWorld(universe: Universe): Universe {
     },
     {
       id: `diary-${turn}-1`,
-      year: universe.era + turn,
+      year: universe.era + turn * 4,
       label: 'дневник',
       title: character ? `Запись о ${character.name.split(' ')[0]}` : 'Запись без имени',
       text: character

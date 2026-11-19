@@ -2,6 +2,7 @@ import type { AccentKey } from '../theme';
 import { clamp } from '../theme';
 import { buildDecision } from './events';
 import { hashString, mulberry32 } from './hash';
+import { varyUniverse } from './lexicon';
 import { buildGenesisPack } from './genesis';
 import { detectTheme, GENESIS_TEMPLATE, ThemePack } from './themes';
 import type {
@@ -300,8 +301,9 @@ export function createUniverse(question: string, mode: EngineMode = 'demo'): Uni
     path: [],
   };
 
-  universe.state.pending = buildDecision(universe);
-  return universe;
+  const world = mode === 'demo' ? varyUniverse(universe) : universe;
+  world.state.pending = buildDecision(world);
+  return world;
 }
 
 export function pickAccent(seed: number): AccentKey {

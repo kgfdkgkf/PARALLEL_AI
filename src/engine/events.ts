@@ -1,5 +1,6 @@
 import { clamp } from '../theme';
 import { hashString } from './hash';
+import { tickWorld } from './diary';
 import { makeNews } from './news';
 import { detectTheme, GENESIS_TEMPLATE, type Lexicon } from './themes';
 import type {
@@ -524,7 +525,7 @@ export function applyOption(
 
   const before = { ...universe.state.metrics };
   const snapshot = clone(universe.state);
-  const next = clone(universe.state);
+  let next = clone(universe.state);
   const turn = universe.state.turn;
 
   (Object.keys(option.effects) as (keyof Metrics)[]).forEach((key) => {
@@ -612,7 +613,7 @@ export function applyOption(
   };
 
   let allyName: string | undefined;
-  const ally = allyId ? next.characters.find((item) => item.id === allyId && item.bond >= 50) : undefined;
+  const ally = universe.state.characters.find((item) => item.id === allyId && item.bond >= 50);
   if (ally) {
     allyName = ally.name;
     const allyMetric = ally.stance === 'control' ? 'order' : ally.stance === 'liberty' ? 'freedom' : 'tech';
@@ -631,7 +632,9 @@ export function applyOption(
     });
   }
 
-  nextUniverse.state.news = [...makeNews(nextUniverse, option, turn + 1, next.metrics), ...next.news].slice(0, 12);
+  next = tickWorld(nextUniverse).state;
+  nextUniverse.state = next;
+  next.news = [...makeNews(nextUniverse, option, next.turn, next.metrics), ...next.news].slice(0, 12);
 
   let ending: Ending | null = null;
   if (next.turn >= TOTAL_DECISIONS) {

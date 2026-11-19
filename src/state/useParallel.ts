@@ -4,8 +4,6 @@ import { createUniverse } from '../engine/generate';
 import { applyOption, buildDecision, rewindUniverse } from '../engine/events';
 import { exploreLocation, type Scene } from '../engine/explore';
 import { bless, curse } from '../engine/divine';
-import { varyUniverse } from '../engine/lexicon';
-import { tickWorld } from '../engine/diary';
 import { greetingFor, replyToCharacter, suggestedQuestions } from '../engine/chat';
 import {
   AiError,
@@ -264,8 +262,7 @@ export function useParallel() {
       }
       const generated = await aiRequest;
       if (token !== forgeToken.current) return;
-      const base = generated ?? createUniverse(clean);
-      const universe = generated ? base : varyUniverse(base);
+      const universe = generated ?? createUniverse(clean);
       if (generated) setAiStatus('online');
       const first = universe.state.characters[0];
       commit(universe);
@@ -299,9 +296,9 @@ export function useParallel() {
   const choose = useCallback(
     (optionId: string, allyId?: string) => {
       const universe = activeRef.current;
-      if (!universe) return;
+      if (!universe?.state.pending?.options.some((option) => option.id === optionId)) return;
       const result = applyOption(universe, optionId, allyId);
-      commit(tickWorld(result.universe));
+      commit(result.universe);
       setOutcome({
         option: result.option,
         before: result.before,
