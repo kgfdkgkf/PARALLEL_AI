@@ -65,8 +65,8 @@
 
 ```powershell
 cd "папка проекта"
-npm install
-npx expo start
+npm.cmd install
+npx.cmd expo start
 ```
 
 > В PowerShell на этом компьютере заблокированы `.ps1`-скрипты, поэтому при ошибке
