@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Circle, Defs, RadialGradient, Stop } from 'react-native-svg';
 import { Atmosphere, Halo } from '../components/Atmosphere';
 import { Icon } from '../components/Icon';
-import { Mono, Overline } from '../components/ui';
+import { GhostButton, Mono, Overline } from '../components/ui';
 import { detectTheme } from '../engine/themes';
 import { accents, font, palette } from '../theme';
 import type { ParallelStore } from '../state/useParallel';
@@ -42,7 +42,8 @@ export function ForgeScreen({ store }: { store: ParallelStore }) {
   }, [breathe, spinA, spinB]);
 
   const progress = Math.min(1, store.forgeStage / STAGES.length);
-  const percent = Math.round(progress * 100);
+  const waiting = progress === 1 && store.engineMode === 'ai';
+  const percent = Math.min(waiting ? 96 : 100, Math.round(progress * 100));
 
   return (
     <View style={{ flex: 1 }}>
@@ -158,9 +159,11 @@ export function ForgeScreen({ store }: { store: ParallelStore }) {
           <View style={styles.progressTrack}>
             <View style={[styles.progressFill, { width: `${Math.max(4, percent)}%`, backgroundColor: scheme.core }]} />
           </View>
-          <Text style={styles.note}>
-            Мир держится на одном правиле. Дальше всё зависит от решений — и от того, что этот мир запомнит.
-          </Text>
+          {waiting ? <Text style={styles.note}>Модель ещё пишет мир. Уже можно начать с локальной версии.</Text> : null}
+          <View style={{ gap: 6, marginTop: 10 }}>
+            {waiting ? <GhostButton title="Начать локально" accent={accent} compact onPress={store.playLocal} /> : null}
+            <GhostButton title="Вернуться к гипотезе" icon="back" accent={accent} compact onPress={store.back} />
+          </View>
         </View>
       </SafeAreaView>
     </View>

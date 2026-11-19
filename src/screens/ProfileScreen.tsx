@@ -211,12 +211,13 @@ export function ProfileScreen({ store }: { store: ParallelStore }) {
               <View style={styles.aiActions}>
                 <GhostButton
                   title={store.aiChecking ? 'Проверяем…' : 'Проверить связь'}
+                  disabled={store.aiChecking}
                   icon="spark"
                   accent="cyan"
                   compact
                   onPress={async () => {
                     const result = await store.checkAi();
-                    setCheckMessage(result.message);
+                    if (result) setCheckMessage(result.message);
                   }}
                 />
                 <View style={styles.aiStatus}>

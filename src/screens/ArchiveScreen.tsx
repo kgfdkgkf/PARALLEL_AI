@@ -101,6 +101,7 @@ function ArchiveCard({
         <View style={{ flex: 1, gap: 6 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
             <Text numberOfLines={1} style={[styles.cardCode, { color: scheme.text }]}>{world.codename}</Text>
+            {world.fork ? <Pill accent="violet">ветвь с точки {world.fork.turn}</Pill> : null}
             {ending ? <Pill accent={ending.accent}>финал</Pill> : <Pill accent="cyan">в процессе</Pill>}
           </View>
           <Text numberOfLines={2} style={styles.cardTitle}>

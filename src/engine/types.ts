@@ -204,6 +204,7 @@ export type BranchNode = {
 export type Universe = {
   id: string;
   seed: number;
+  fork?: { sourceId: string; turn: number };
   question: string;
   title: string;
   codename: string;

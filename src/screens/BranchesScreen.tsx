@@ -40,8 +40,7 @@ export function BranchesScreen({ store }: { store: ParallelStore }) {
           <Reveal>
             <Text style={styles.title}>Ветви{'\n'}реальности</Text>
             <Text style={styles.subtitle}>
-              Каждое решение — отдельная ветвь с собственным снимком мира. Вернись к любой точке и выбери иначе: ИИ пересчитает
-              последствия, но не забудет, что было раньше.
+              Перед каждым решением сохраняется снимок мира. Создай из него новую ветвь и сделай другой выбор. Обе линии будут доступны в архиве.
             </Text>
             <View style={styles.chips}>
               <Pill accent={universe.accent}>{path.length}/{TOTAL_DECISIONS} решений</Pill>
@@ -119,11 +118,11 @@ export function BranchesScreen({ store }: { store: ParallelStore }) {
                           })}
                           <View style={{ marginTop: 14 }}>
                             <GhostButton
-                              title="Вернуться к этой точке"
+                              title="Начать новую ветвь отсюда"
                               icon="reset"
                               accent={universe.accent}
                               compact
-                              onPress={() => store.rewind(node.id)}
+                              onPress={() => store.fork(node.id)}
                             />
                           </View>
                         </>
@@ -140,9 +139,9 @@ export function BranchesScreen({ store }: { store: ParallelStore }) {
             <View style={styles.howCard}>
               {[
                 ['01', 'Снимок мира', 'Перед каждым решением сохраняется полное состояние: законы, жители, метрики, хроника.'],
-                ['02', 'Транзакция', 'Выбор меняет метрики, добавляет закон, обновляет доверие жителей и пишет факт в память.'],
+                ['02', 'Последствия', 'Выбор меняет метрики, добавляет закон, обновляет доверие жителей и пишет факт в память.'],
                 ['03', 'Пересчёт', 'Следующие события строятся уже с учётом нового состояния — мир помнит, что ты сделал.'],
-                ['04', 'Возврат', 'Вернувшись в точку, ты не «отменяешь» прошлое, а создаёшь новую ветвь от того же снимка.'],
+                ['04', 'Новая ветвь', 'Снимок становится началом отдельной линии в архиве.'],
               ].map(([index, title, text]) => (
                 <View key={index} style={styles.howRow}>
                   <Text style={[styles.howIndex, { color: scheme.text }]}>{index}</Text>

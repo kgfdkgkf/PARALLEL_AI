@@ -92,10 +92,11 @@ function AppShell() {
 
   const ready = store.hydrated && (fontsLoaded || fontError);
 
+  const goBack = store.back;
   const back = useCallback(() => {
-    store.back();
+    goBack();
     return true;
-  }, [store]);
+  }, [goBack]);
 
   useEffect(() => {
     if (Platform.OS !== 'android') return;

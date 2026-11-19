@@ -2,8 +2,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AppState } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { advanceLife } from '../engine/life';
-import { createUniverse } from '../engine/generate';
-import { applyOption, buildDecision, rewindUniverse } from '../engine/events';
+import { isPlayableHypothesis } from '../engine/hypothesis';
+import { createUniverse, characterStatus } from '../engine/generate';
+import { applyOption, buildDecision, forkUniverse } from '../engine/events';
 import { exploreLocation, type Scene } from '../engine/explore';
 import { bless, curse, useDivinePower } from '../engine/divine';
 import { greetingFor, replyToCharacter, suggestedQuestions } from '../engine/chat';
@@ -56,17 +57,16 @@ export function useParallel() {
   const [hydrated, setHydrated] = useState(false);
   const [archive, setArchive] = useState<Universe[]>([]);
   const [active, setActive] = useState<Universe | null>(null);
-  const [screen, setScreen] = useState<Screen>('home');
-  const [history, setHistory] = useState<Screen[]>([]);
-  const [tab, setTab] = useState<Tab>('home');
+  const [route, setRoute] = useState<{ screen: Screen; history: Screen[]; tab: Tab }>({ screen: 'home', history: [], tab: 'home' });
+  const { screen, tab } = route;
   const [outcome, setOutcome] = useState<Outcome | null>(null);
   const [forgeStage, setForgeStage] = useState(0);
   const [forgeQuestion, setForgeQuestion] = useState('');
   const [selectedCharacterId, setSelectedCharacterId] = useState<string | null>(null);
   const [selectedLocationId, setSelectedLocationId] = useState<string | null>(null);
   const [chats, setChats] = useState<Record<string, ChatMessage[]>>({});
-  const [typing, setTyping] = useState(false);
-  const [decisionLoading, setDecisionLoading] = useState(false);
+  const [typingKeys, setTypingKeys] = useState<string[]>([]);
+  const [decisionIds, setDecisionIds] = useState<string[]>([]);
   const [aiSettings, setAiSettings] = useState<AiSettings>(DEFAULT_SETTINGS);
   const [aiStatus, setAiStatus] = useState<AiStatus>('unknown');
   const [aiError, setAiError] = useState<string | null>(null);
@@ -78,228 +78,258 @@ export function useParallel() {
   const archiveRef = useRef<Universe[]>([]);
   const chatsRef = useRef<Record<string, ChatMessage[]>>({});
   const forgeToken = useRef(0);
-  const decisionToken = useRef('');
-
-  useEffect(() => {
-    activeRef.current = active;
-  }, [active]);
-  useEffect(() => {
-    archiveRef.current = archive;
-  }, [archive]);
-  useEffect(() => {
-    chatsRef.current = chats;
-  }, [chats]);
+  const decisionsInProgress = useRef(new Map<string, symbol>());
+  const chatInProgress = useRef(new Map<string, symbol>());
+  const archiveWrites = useRef(Promise.resolve());
+  const settingsWrites = useRef(Promise.resolve());
+  const shouldSaveArchive = useRef(false);
+  const aiSettingsRef = useRef(DEFAULT_SETTINGS);
+  const checkToken = useRef(0);
 
   useEffect(() => {
     let cancelled = false;
-    AsyncStorage.getItem(STORAGE_KEY)
-      .then((raw) => {
-        if (cancelled || !raw) return;
-        const parsed = JSON.parse(raw) as Persisted;
-        if (Array.isArray(parsed.archive)) {
-          setArchive(parsed.archive);
-          archiveRef.current = parsed.archive;
-        }
-        if (parsed.chats) setChats(parsed.chats);
-        if (parsed.activeId) {
-          const found = parsed.archive?.find((item) => item.id === parsed.activeId);
-          if (found) {
-            setActive(found);
-            activeRef.current = found;
-          }
-        }
-      })
-      .catch(() => undefined)
-      .finally(() => {
-        if (!cancelled) setHydrated(true);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+    Promise.all([AsyncStorage.getItem(STORAGE_KEY).catch(() => null), loadAiSettings()]).then(([raw, settings]) => {
+      if (cancelled) return;
+      aiSettingsRef.current = settings;
+      setAiSettings(settings);
 
-  useEffect(() => {
-    let cancelled = false;
-    loadAiSettings().then((loaded) => {
-      if (!cancelled) setAiSettings(loaded);
+      if (raw) {
+        try {
+          const parsed = JSON.parse(raw) as Persisted;
+          const saved = Array.isArray(parsed.archive)
+            ? parsed.archive.filter((item) => item && typeof item.id === 'string' && item.state && Array.isArray(item.path))
+            : [];
+          const savedIds = new Set(saved.map((item) => item.id));
+          const loadedChats = Object.fromEntries(Object.entries(parsed.chats ?? {}).filter(
+            ([key, value]) => savedIds.has(key.split(':')[0]) && Array.isArray(value),
+          ));
+          const current = saved.find((item) => item.id === parsed.activeId) ?? null;
+          archiveRef.current = saved;
+          activeRef.current = current;
+          chatsRef.current = loadedChats;
+          setArchive(saved);
+          setActive(current);
+          setChats(loadedChats);
+        } catch {
+          // The existing value remains untouched until the player makes a new save.
+        }
+      }
+      setHydrated(true);
     });
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, []);
 
   const updateAiSettings = useCallback((patch: Partial<AiSettings>) => {
-    setAiSettings((current) => {
-      const next = { ...current, ...patch };
-      saveAiSettings(next).catch(() => undefined);
-      return next;
-    });
+    const previous = aiSettingsRef.current;
+    const next = { ...previous, ...patch };
+    aiSettingsRef.current = next;
+    setAiSettings(next);
+    if (next.provider !== previous.provider || next.key !== previous.key || next.model !== previous.model) {
+      checkToken.current += 1;
+      setAiStatus('unknown');
+      setAiError(null);
+      setAiChecking(false);
+    }
+    settingsWrites.current = settingsWrites.current.then(() => saveAiSettings(next)).catch(() => undefined);
   }, []);
 
   const checkAi = useCallback(async () => {
+    const token = ++checkToken.current;
+    const settings = aiSettingsRef.current;
     setAiChecking(true);
     setAiError(null);
     try {
-      const result = await testProvider(aiSettings);
-      setAiStatus(result.ok ? 'online' : 'offline');
-      if (!result.ok) setAiError(result.message);
-      return result;
+      const result = await testProvider(settings);
+      if (checkToken.current === token) {
+        setAiStatus(result.ok ? 'online' : 'offline');
+        setAiError(result.ok ? null : result.message);
+        return result;
+      }
+      return null;
     } finally {
-      setAiChecking(false);
+      if (checkToken.current === token) setAiChecking(false);
     }
-  }, [aiSettings]);
-
-  useEffect(() => {
-    if (!hydrated) return;
-    const payload: Persisted = {
-      version: 2,
-      archive,
-      activeId: active?.id ?? null,
-      chats,
-    };
-    AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(payload)).catch(() => undefined);
-  }, [archive, active, chats, hydrated]);
-
-  const navigate = useCallback((next: Screen) => {
-    setScreen((current) => {
-      setHistory((stack) => [...stack, current].slice(-12));
-      return next;
-    });
   }, []);
 
-  const go = useCallback(
-    (next: Screen, options?: { replace?: boolean }) => {
-      if (TAB_SCREENS.includes(next)) {
-        setTab(next as Tab);
-        setHistory([]);
-        setScreen(next);
-        return;
-      }
-      if (options?.replace) {
-        setScreen(next);
-        return;
-      }
-      navigate(next);
-    },
-    [navigate],
-  );
+  useEffect(() => {
+    if (!hydrated || !shouldSaveArchive.current) return;
+    const payload: Persisted = { version: 2, archive, activeId: active?.id ?? null, chats };
+    const serialized = JSON.stringify(payload);
+    archiveWrites.current = archiveWrites.current.then(() => AsyncStorage.setItem(STORAGE_KEY, serialized)).catch(() => undefined);
+  }, [archive, active, chats, hydrated]);
 
-  const landInWorld = useCallback(() => {
-    setHistory([]);
-    setTab('home');
-    setScreen('world');
+  const go = useCallback((next: Screen, options?: { replace?: boolean }) => {
+    setRoute((current) => {
+      if (TAB_SCREENS.includes(next)) return { screen: next, history: [], tab: next as Tab };
+      if (current.screen === next) return current;
+      const history = options?.replace ? current.history : [...current.history, current.screen].slice(-12);
+      return { ...current, screen: next, history };
+    });
   }, []);
 
   const back = useCallback(() => {
-    setHistory((stack) => {
-      if (stack.length === 0) {
-        setScreen('home');
-        setTab('home');
-        return stack;
-      }
-      const next = stack[stack.length - 1];
-      setScreen(next);
-      if (TAB_SCREENS.includes(next)) setTab(next as Tab);
-      return stack.slice(0, -1);
+    if (screen === 'forge') forgeToken.current += 1;
+    setRoute((current) => {
+      const previous = current.history.at(-1);
+      if (!previous) return { screen: 'home', history: [], tab: 'home' };
+      return {
+        screen: previous,
+        history: current.history.slice(0, -1),
+        tab: TAB_SCREENS.includes(previous) ? previous as Tab : current.tab,
+      };
     });
+  }, [screen]);
+
+  const updateChats = useCallback((next: Record<string, ChatMessage[]>) => {
+    shouldSaveArchive.current = true;
+    chatsRef.current = next;
+    setChats(next);
   }, []);
 
-  const commit = useCallback((universe: Universe) => {
-    activeRef.current = universe;
-    setActive(universe);
-    setArchive((current) => mergeArchive(current, universe));
+  const clearWorldChats = useCallback((id: string) => {
+    const prefix = `${id}:`;
+    for (const key of chatInProgress.current.keys()) {
+      if (key.startsWith(prefix)) chatInProgress.current.delete(key);
+    }
+    setTypingKeys([...chatInProgress.current.keys()]);
+    updateChats(Object.fromEntries(Object.entries(chatsRef.current).filter(([key]) => !key.startsWith(prefix))));
+  }, [updateChats]);
+
+  const stopDecision = useCallback((id: string) => {
+    if (!decisionsInProgress.current.delete(id)) return;
+    setDecisionIds([...decisionsInProgress.current.keys()]);
   }, []);
 
-  const requestNextDecision = useCallback(
-    (universe: Universe) => {
-      const token = `${universe.id}:${universe.state.turn}`;
-      decisionToken.current = token;
-      setDecisionLoading(true);
-      nextDecisionAI(universe, aiSettings)
-        .then((decision) => {
-          if (decisionToken.current !== token) return;
-          const current = activeRef.current;
-          if (!current || current.id !== universe.id) return;
-          commit({ ...current, state: { ...current.state, pending: decision } });
+  const commit = useCallback((universe: Universe, activate = false) => {
+    shouldSaveArchive.current = true;
+    const isActive = activate || activeRef.current?.id === universe.id;
+    const previous = archiveRef.current;
+    const current = isActive
+      ? mergeArchive(previous, universe)
+      : previous.map((item) => item.id === universe.id ? universe : item);
+    archiveRef.current = current;
+    setArchive(current);
+    for (const evicted of previous) {
+      if (!current.some((item) => item.id === evicted.id)) {
+        stopDecision(evicted.id);
+        clearWorldChats(evicted.id);
+      }
+    }
+    if (isActive) {
+      activeRef.current = universe;
+      setActive(universe);
+    }
+  }, [clearWorldChats, stopDecision]);
+
+  const requestNextDecision = useCallback((universe: Universe, settings: AiSettings) => {
+    const token = Symbol();
+    decisionsInProgress.current.set(universe.id, token);
+    setDecisionIds([...decisionsInProgress.current.keys()]);
+    const stillWaiting = () => decisionsInProgress.current.get(universe.id) === token;
+    const showStatus = () => activeRef.current?.id === universe.id && aiSettingsRef.current === settings;
+    nextDecisionAI(universe, settings)
+      .then((decision) => {
+        if (!stillWaiting()) return;
+        const current = archiveRef.current.find((item) => item.id === universe.id);
+        if (!current || current.state.turn !== universe.state.turn) return;
+        commit({ ...current, state: { ...current.state, pending: decision } });
+        if (showStatus()) {
           setAiStatus('online');
           setAiError(null);
-        })
-        .catch((error) => {
-          setAiError(error instanceof AiError ? error.message : 'Не удалось получить событие');
+        }
+      })
+      .catch((error) => {
+        if (stillWaiting() && showStatus()) {
           setAiStatus('offline');
-          const current = activeRef.current;
-          if (current && current.id === universe.id) {
-            commit({ ...current, state: { ...current.state, pending: buildDecision(universe) } });
-          }
-        })
-        .finally(() => {
-          if (decisionToken.current === token) setDecisionLoading(false);
-        });
-    },
-    [aiSettings, commit],
-  );
+          setAiError(error instanceof AiError ? error.message : 'Не удалось получить событие');
+        }
+      })
+      .finally(() => { if (stillWaiting()) stopDecision(universe.id); });
+  }, [commit, stopDecision]);
 
-  const createWorld = useCallback(
-    async (question: string) => {
-      const clean = question.trim();
-      if (!clean) return;
-      forgeToken.current += 1;
-      const token = forgeToken.current;
-      setForgeQuestion(clean);
-      setForgeStage(0);
-      go('forge');
-      const ready = aiReady(aiSettings);
-      const aiRequest = ready
-        ? generateUniverseAI(clean, aiSettings).catch((error) => {
-            setAiError(error instanceof AiError ? error.message : 'AI-ядро недоступно');
-            setAiStatus('offline');
-            return null;
-          })
-        : Promise.resolve(null);
-      const stages = [700, 1000, 1100, 900];
-      for (let index = 0; index < stages.length; index += 1) {
-        await delay(stages[index]);
-        if (token !== forgeToken.current) return;
-        setForgeStage(index + 1);
-      }
-      const generated = await aiRequest;
-      if (token !== forgeToken.current) return;
-      const universe = advanceLife(generated ?? createUniverse(clean));
-      if (generated) setAiStatus('online');
-      const first = universe.state.characters[0];
-      commit(universe);
-      setChats((current) => ({
-        ...current,
+  const finishForge = useCallback((generated: Universe | null, question: string, settings: AiSettings) => {
+    const base = generated ?? createUniverse(question);
+    const needsDecision = generated && !generated.state.pending;
+    let universe = advanceLife(base);
+    if (needsDecision) universe = { ...universe, state: { ...universe.state, pending: buildDecision(universe) } };
+    const first = universe.state.characters[0];
+    commit(universe, true);
+    if (first) {
+      updateChats({
+        ...chatsRef.current,
         [`${universe.id}:${first.id}`]: [{ id: 'greet', from: 'character', text: greetingFor(universe, first) }],
-      }));
-      setSelectedLocationId(universe.state.locations[0]?.id ?? null);
-      setSelectedCharacterId(first.id);
-      landInWorld();
+      });
+    }
+    setSelectedLocationId(universe.state.locations[0]?.id ?? null);
+    setSelectedCharacterId(first?.id ?? null);
+    setScene(null);
+    setOutcome(null);
+    setRoute({ screen: 'world', history: [], tab: 'home' });
+    if (needsDecision) requestNextDecision(universe, settings);
+  }, [commit, requestNextDecision, updateChats]);
 
-      if (generated && !generated.state.pending) {
-        requestNextDecision(generated);
-      }
-    },
-    [aiSettings, commit, go, landInWorld, requestNextDecision],
-  );
+  const createWorld = useCallback(async (question: string) => {
+    const clean = question.trim();
+    if (!isPlayableHypothesis(clean)) return;
+    const token = ++forgeToken.current;
+    const settings = aiSettingsRef.current;
+    setForgeQuestion(clean);
+    setForgeStage(0);
+    go('forge');
+    const request = aiReady(settings)
+      ? generateUniverseAI(clean, settings).then(
+          (world) => ({ world, error: null }),
+          (error: unknown) => ({ world: null, error: error instanceof AiError ? error.message : 'AI-ядро недоступно' }),
+        )
+      : Promise.resolve({ world: null, error: null });
+    for (const [index, time] of [260, 300, 350, 360].entries()) {
+      await delay(time);
+      if (token !== forgeToken.current) return;
+      setForgeStage(index + 1);
+    }
+    const { world, error } = await request;
+    if (token !== forgeToken.current) return;
+    if (world || error) {
+      setAiStatus(world ? 'online' : 'offline');
+      setAiError(error);
+    }
+    finishForge(world, clean, settings);
+  }, [finishForge, go]);
 
-  const openWorld = useCallback(
-    (universe: Universe) => {
-      const refreshed = advanceLife(universe);
-      commit(refreshed);
-      setScene(null);
-      setSelectedLocationId(universe.state.locations[0]?.id ?? null);
-      setSelectedCharacterId(universe.state.characters[0]?.id ?? null);
-      setOutcome(null);
-      go('world');
-    },
-    [commit, go],
-  );
+  const playLocal = useCallback(() => {
+    if (screen !== 'forge' || !forgeQuestion) return;
+    forgeToken.current += 1;
+    finishForge(null, forgeQuestion, aiSettingsRef.current);
+  }, [finishForge, forgeQuestion, screen]);
+
+  const openWorld = useCallback((universe: Universe) => {
+    const refreshed = advanceLife(archiveRef.current.find((item) => item.id === universe.id) ?? universe);
+    const ready = refreshed.state.pending || refreshed.state.ending
+      ? refreshed
+      : { ...refreshed, state: { ...refreshed.state, pending: buildDecision(refreshed) } };
+    commit(ready, true);
+    setScene(null);
+    setOutcome(null);
+    setSelectedLocationId(ready.state.locations[0]?.id ?? null);
+    setSelectedCharacterId(ready.state.characters[0]?.id ?? null);
+    go('world');
+  }, [commit, go]);
+
+  const useLocalDecision = useCallback(() => {
+    const universe = activeRef.current;
+    if (!universe || universe.state.ending) return;
+    stopDecision(universe.id);
+    if (!universe.state.pending) {
+      commit({ ...universe, state: { ...universe.state, pending: buildDecision(universe) } });
+    }
+  }, [commit, stopDecision]);
 
   const choose = useCallback(
     (optionId: string, allyId?: string) => {
       const universe = activeRef.current;
-      if (!universe?.state.pending?.options.some((option) => option.id === optionId)) return;
+      if (!universe?.state.pending?.options.some((option) => option.id === optionId) || decisionsInProgress.current.has(universe.id)) return;
+      const settings = aiSettingsRef.current;
+      setScene(null);
       const result = applyOption(universe, optionId, allyId);
       commit(result.universe);
       setOutcome({
@@ -314,11 +344,11 @@ export function useParallel() {
       });
       go('outcome', { replace: true });
 
-      if (aiReady(aiSettings) && result.universe.mode === 'ai' && !result.ending) {
-        requestNextDecision(result.universe);
+      if (aiReady(settings) && result.universe.mode === 'ai' && !result.ending) {
+        requestNextDecision(result.universe, settings);
       }
     },
-    [aiSettings, commit, go, requestNextDecision],
+    [commit, go, requestNextDecision],
   );
 
   const explore = useCallback(
@@ -379,114 +409,118 @@ export function useParallel() {
     if (next) commit(next);
   }, [commit]);
 
-  const rewind = useCallback(
-    (nodeId: string) => {
-      const universe = activeRef.current;
-      if (!universe) return;
-      const restored = rewindUniverse(universe, nodeId);
-      commit(restored);
-      go('decision');
-    },
-    [commit, go],
-  );
+  const fork = useCallback((nodeId: string) => {
+    const universe = activeRef.current;
+    if (!universe) return;
+    const branch = forkUniverse(universe, nodeId);
+    if (!branch) return;
+    commit(advanceLife(branch), true);
+    setScene(null);
+    setOutcome(null);
+    setSelectedLocationId(branch.state.locations[0]?.id ?? null);
+    setSelectedCharacterId(branch.state.characters[0]?.id ?? null);
+    setRoute({ screen: 'decision', history: ['world'], tab: 'home' });
+  }, [commit]);
 
-  const openCharacter = useCallback(
-    (characterId: string) => {
-      const universe = activeRef.current;
-      if (!universe) return;
-      setSelectedCharacterId(characterId);
-      const key = `${universe.id}:${characterId}`;
-      if (!chatsRef.current[key]) {
-        const character = universe.state.characters.find((item) => item.id === characterId);
-        if (character) {
-          setChats((current) => ({
-            ...current,
-            [key]: [{ id: 'greet', from: 'character', text: greetingFor(universe, character) }],
-          }));
-        }
-      }
-      go('character');
-    },
-    [go],
-  );
+  const openCharacter = useCallback((characterId: string) => {
+    const universe = activeRef.current;
+    const character = universe?.state.characters.find((item) => item.id === characterId);
+    if (!universe || !character) return;
+    const key = `${universe.id}:${characterId}`;
+    if (!chatsRef.current[key]) {
+      updateChats({
+        ...chatsRef.current,
+        [key]: [{ id: 'greet', from: 'character', text: greetingFor(universe, character) }],
+      });
+    }
+    setSelectedCharacterId(characterId);
+    go('character');
+  }, [go, updateChats]);
 
-  const sendMessage = useCallback(
-    async (raw: string) => {
-      const text = raw.trim();
-      const universe = activeRef.current;
-      const characterId = selectedCharacterId;
-      if (!text || !universe || !characterId) return;
-      const key = `${universe.id}:${characterId}`;
-      const character = universe.state.characters.find((item) => item.id === characterId);
-      if (!character) return;
-      const existing = chatsRef.current[key] ?? [];
-      const userMessage: ChatMessage = { id: `u-${Date.now()}`, from: 'user', text };
-      const withUser = [...existing, userMessage];
-      chatsRef.current = { ...chatsRef.current, [key]: withUser };
-      setChats((current) => ({ ...current, [key]: withUser }));
-      setTyping(true);
-      await delay(760 + Math.min(1200, text.length * 22));
+  const sendMessage = useCallback(async (raw: string) => {
+    const text = raw.trim();
+    const universe = activeRef.current;
+    const character = universe?.state.characters.find((item) => item.id === selectedCharacterId);
+    if (!text || !universe || !character) return;
+    const key = `${universe.id}:${character.id}`;
+    if (chatInProgress.current.has(key)) return;
+    const token = Symbol();
+    chatInProgress.current.set(key, token);
+    setTypingKeys([...chatInProgress.current.keys()]);
+    const existing = chatsRef.current[key] ?? [];
+    const message: ChatMessage = { id: `u-${Date.now()}`, from: 'user', text };
+    const withUser = [...existing, message].slice(-79);
+    updateChats({ ...chatsRef.current, [key]: withUser });
+    const settings = aiSettingsRef.current;
+
+    try {
+      await delay(420 + Math.min(600, text.length * 10));
+      if (chatInProgress.current.get(key) !== token) return;
       let aiText: string | null = null;
-      if (aiReady(aiSettings) && universe.mode === 'ai') {
+      if (aiReady(settings) && universe.mode === 'ai') {
         try {
-          aiText = await chatAI(
-            universe,
-            character.name,
-            character.role,
-            text,
-            existing.slice(-8).map((item) => ({ from: item.from, text: item.text })),
-            aiSettings,
-          );
+          aiText = await chatAI(universe, character.name, character.role, text, existing.slice(-8), settings);
         } catch (error) {
-          setAiError(error instanceof AiError ? error.message : 'Модель не ответила');
+          if (activeRef.current?.id === universe.id && aiSettingsRef.current === settings && chatInProgress.current.get(key) === token) {
+            setAiError(error instanceof AiError ? error.message : 'Модель не ответила');
+          }
         }
       }
-      if (aiText) setAiError(null);
+      if (chatInProgress.current.get(key) !== token) return;
+      const current = archiveRef.current.find((item) => item.id === universe.id);
+      const resident = current?.state.characters.find((item) => item.id === character.id);
+      if (!current || !resident) return;
+
       const reply = aiText
-        ? { text: aiText, bondDelta: 3, revealedSecret: false }
-        : replyToCharacter(universe, character, text, existing.filter((item) => item.from === 'user').length);
-      const updatedUniverse: Universe = {
-        ...universe,
-        updatedAt: new Date().toISOString(),
-        state: {
-          ...universe.state,
-          characters: universe.state.characters.map((item) =>
-            item.id === characterId
-              ? {
-                  ...item,
-                  bond: Math.min(100, item.bond + reply.bondDelta),
-                  status: item.bond + reply.bondDelta >= 78 ? 'На вашей стороне' : item.bond + reply.bondDelta >= 58 ? 'Доверяет' : item.bond + reply.bondDelta >= 38 ? 'Открыт к разговору' : 'Насторожен',
-                }
-              : item,
-          ),
-        },
-      };
-      const withReply = [...withUser, { id: `c-${Date.now()}`, from: 'character' as const, text: reply.text }];
-      chatsRef.current = { ...chatsRef.current, [key]: withReply };
-      setChats((current) => ({ ...current, [key]: withReply }));
-      commit(updatedUniverse);
-      setTyping(false);
-    },
-    [aiSettings, commit, selectedCharacterId],
-  );
+        ? { text: aiText, bondDelta: 3 }
+        : replyToCharacter(current, resident, text, existing.filter((item) => item.from === 'user').length);
+      const response: ChatMessage = { id: `c-${Date.now()}`, from: 'character', text: reply.text };
+      updateChats({ ...chatsRef.current, [key]: [...withUser, response] });
+
+      if (!current.state.ending) {
+        const bond = Math.min(100, resident.bond + reply.bondDelta);
+        const characters = current.state.characters.map((item) => item.id === resident.id
+          ? { ...item, bond, status: characterStatus(bond) }
+          : item);
+        commit({ ...current, updatedAt: new Date().toISOString(), state: { ...current.state, characters } });
+      }
+    } finally {
+      if (chatInProgress.current.get(key) === token) {
+        chatInProgress.current.delete(key);
+        setTypingKeys([...chatInProgress.current.keys()]);
+      }
+    }
+  }, [commit, selectedCharacterId, updateChats]);
 
   const deleteWorld = useCallback((id: string) => {
-    setArchive((current) => current.filter((item) => item.id !== id));
+    shouldSaveArchive.current = true;
+    const next = archiveRef.current.filter((item) => item.id !== id);
+    archiveRef.current = next;
+    setArchive(next);
+    stopDecision(id);
+    clearWorldChats(id);
     if (activeRef.current?.id === id) {
       activeRef.current = null;
       setActive(null);
+      setOutcome(null);
+      setScene(null);
     }
-  }, []);
+  }, [clearWorldChats, stopDecision]);
 
   const resetAll = useCallback(() => {
-    setArchive([]);
-    setActive(null);
-    setChats({});
-    chatsRef.current = {};
+    forgeToken.current += 1;
+    decisionsInProgress.current.clear();
+    chatInProgress.current.clear();
     archiveRef.current = [];
     activeRef.current = null;
-    AsyncStorage.removeItem(STORAGE_KEY).catch(() => undefined);
-  }, []);
+    setArchive([]);
+    setActive(null);
+    setDecisionIds([]);
+    setTypingKeys([]);
+    setOutcome(null);
+    setScene(null);
+    updateChats({});
+  }, [updateChats]);
 
   const activeCharacter = useMemo(() => {
     if (!active || !selectedCharacterId) return null;
@@ -522,6 +556,8 @@ export function useParallel() {
   useEffect(() => {
     return () => {
       forgeToken.current += 1;
+      decisionsInProgress.current.clear();
+      chatInProgress.current.clear();
     };
   }, []);
 
@@ -535,8 +571,8 @@ export function useParallel() {
     outcome,
     forgeStage,
     forgeQuestion,
-    typing,
-    decisionLoading,
+    typing: !!active && typingKeys.includes(`${active.id}:${selectedCharacterId}`),
+    decisionLoading: !!active && decisionIds.includes(active.id),
     aiStatus,
     aiError,
     aiChecking,
@@ -557,9 +593,11 @@ export function useParallel() {
     go,
     back,
     createWorld,
+    playLocal,
     openWorld,
     choose,
-    rewind,
+    useLocalDecision,
+    fork,
     scene,
     explore,
     observeDay,

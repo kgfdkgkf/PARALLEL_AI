@@ -13,6 +13,7 @@
 
 import { clamp, type AccentKey, type CoverId } from '../theme';
 import { anchorMatches, hypothesisText, premiseAnchors } from './hypothesis';
+import { newWorldId } from './worldId';
 import { dedupeCulture } from './culture';
 import { hashString, mulberry32 } from './hash';
 import { isAiReady, modelOf, providerOf, type AiSettings } from './providers';
@@ -550,7 +551,7 @@ export function universeFromWire(wire: WireWorld, question: string): Universe | 
     }));
 
     const characters = charactersFrom(cast, locations, laws, random);
-    const universeId = `ai-${seed.toString(36)}-${Date.now().toString(36).slice(-4)}`;
+    const universeId = newWorldId('ai', seed);
     const chronicle = chronicleFrom(eras.sort((a, b) => a.year - b.year), rule, era, accent);
 
     const state: WorldState = {

@@ -1,5 +1,6 @@
 import type { AccentKey } from '../theme';
 import { clamp } from '../theme';
+import { newWorldId } from './worldId';
 import { buildDecision } from './events';
 import { scenarioFor } from './scenarios';
 import { hypothesisText } from './hypothesis';
@@ -277,7 +278,7 @@ export function createUniverse(question: string, mode: EngineMode = 'demo'): Uni
     ending: null,
   };
 
-  const worldId = `u-${seed.toString(36)}-${Date.now().toString(36).slice(-4)}`;
+  const worldId = newWorldId('u', seed);
 
   const universe: Universe = {
     id: worldId,

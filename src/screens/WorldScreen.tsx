@@ -113,6 +113,7 @@ export function WorldScreen({ store }: { store: ParallelStore }) {
                 </View>
                 <Text style={styles.heroTitle}>{universe.title}</Text>
                 <Text style={styles.heroQuestion}>«{universe.question}»</Text>
+                {universe.fork ? <Pill accent={universe.accent}>ветвь с точки {universe.fork.turn}</Pill> : null}
                 <View style={styles.heroStats}>
                   <View style={styles.heroStat}>
                     <Text style={[styles.heroStatValue, { color: scheme.text }]}>{state.laws.length}</Text>
@@ -156,6 +157,9 @@ export function WorldScreen({ store }: { store: ParallelStore }) {
           </View>
 
           <View style={{ paddingHorizontal: 20, paddingTop: 18 }}>
+            {tab === 'overview' && universe.mode === 'demo' && store.engineMode === 'ai' && store.aiError ? (
+              <Text accessibilityLiveRegion="polite" style={styles.mapHint}>Мир собран локально. {store.aiError}</Text>
+            ) : null}
             {tab === 'overview' ? <Overview universe={universe} store={store} onOpenMap={() => setTab('map')} /> : null}
             {tab === 'map' ? <MapTab universe={universe} store={store} /> : null}
             {tab === 'people' ? <PeopleTab universe={universe} store={store} /> : null}

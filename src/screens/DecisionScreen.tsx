@@ -33,7 +33,7 @@ export function DecisionScreen({ store }: { store: ParallelStore }) {
     );
   }
 
-  if (!decision) {
+  if (!decision || store.decisionLoading) {
     const loading = store.decisionLoading;
     return (
       <View style={{ flex: 1 }}>
@@ -56,7 +56,10 @@ export function DecisionScreen({ store }: { store: ParallelStore }) {
                 : 'Посмотри финал этой реальности или вернись в одну из ветвей и выбери иначе.'}
             </Text>
             {loading ? (
-              <ActivityIndicator color={accents[universe.accent].hi} style={{ marginTop: 22 }} />
+              <View style={{ alignSelf: 'stretch', gap: 15, marginTop: 20 }}>
+                <ActivityIndicator color={accents[universe.accent].hi} />
+                <GhostButton title="Открыть локальное событие" accent={universe.accent} onPress={store.useLocalDecision} />
+              </View>
             ) : (
               <View style={{ marginTop: 22, alignSelf: 'stretch' }}>
                 <GhostButton

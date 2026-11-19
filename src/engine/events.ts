@@ -1,5 +1,6 @@
 import { clamp } from '../theme';
 import { hashString } from './hash';
+import { newWorldId } from './worldId';
 import { tickWorld } from './diary';
 import { makeNews } from './news';
 import { scenarioFor } from './scenarios';
@@ -752,6 +753,21 @@ export function rewindUniverse(universe: Universe, nodeId: string): Universe {
     state: restored,
     path: universe.path.slice(0, index),
     updatedAt: new Date().toISOString(),
+  };
+}
+
+export function forkUniverse(universe: Universe, nodeId: string, now = Date.now()): Universe | null {
+  const restored = rewindUniverse(universe, nodeId);
+  if (restored === universe) return null;
+  const stamp = new Date(now).toISOString();
+  const state = restored.state;
+  return {
+    ...restored,
+    id: newWorldId('branch', universe.seed),
+    fork: { sourceId: universe.id, turn: state.turn + 1 },
+    createdAt: stamp,
+    updatedAt: stamp,
+    state: state.life ? { ...state, life: { ...state.life, lastAt: now } } : state,
   };
 }
 

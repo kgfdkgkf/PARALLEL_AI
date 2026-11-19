@@ -40,8 +40,6 @@ export function CreateScreen({ store }: { store: ParallelStore }) {
     if (!valid) return;
     store.setDraftQuestion(trimmed);
     store.createWorld(trimmed);
-    setValue('');
-    store.setDraftQuestion('');
   };
 
   const randomPrompt = () => {

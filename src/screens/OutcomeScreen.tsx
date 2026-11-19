@@ -122,7 +122,7 @@ export function OutcomeScreen({ store }: { store: ParallelStore }) {
             <Reveal delay={300} style={{ marginTop: space.xl }}>
               <SectionLabel accent="gold">последствия второго порядка</SectionLabel>
               <View style={{ gap: 10 }}>
-                {[...outcome.option.ripple, ...(outcome.ending ? [] : [])].map((ripple, index) => (
+                {outcome.option.ripple.map((ripple, index) => (
                   <View key={ripple} style={styles.rippleRow}>
                     <Text style={[styles.rippleIndex, { color: scheme.text }]}>{index + 1}</Text>
                     <Text style={styles.rippleText}>{ripple}</Text>
@@ -227,10 +227,10 @@ export function OutcomeScreen({ store }: { store: ParallelStore }) {
             )}
 
             <Reveal delay={560} style={{ marginTop: space.lg }}>
-              <PressableScale onPress={() => store.rewind(outcome.node.id)}>
+              <PressableScale onPress={() => store.fork(outcome.node.id)}>
                 <View style={styles.undoRow}>
                   <Icon name="reset" size={13} color={palette.faint} />
-                  <Text style={styles.undoText}>Отменить и вернуться к этой точке</Text>
+                  <Text style={styles.undoText}>Начать новую ветвь отсюда</Text>
                 </View>
               </PressableScale>
             </Reveal>
