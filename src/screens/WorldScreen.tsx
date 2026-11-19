@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Image, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
+import { Image, ScrollView, Share, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Illustration, illustrationBrief } from '../components/Illustration';
@@ -44,6 +44,8 @@ const TABS: { id: TabKey; label: string; icon: 'compass' | 'map' | 'people' | 't
 export function WorldScreen({ store }: { store: ParallelStore }) {
   const [tab, setTab] = useState<TabKey>('overview');
   const insets = useSafeAreaInsets();
+  const { width, fontScale } = useWindowDimensions();
+  const wrapTabs = width < 410 || fontScale > 1.15;
   const universe = store.active;
   if (!universe) {
     return (
@@ -139,11 +141,11 @@ export function WorldScreen({ store }: { store: ParallelStore }) {
             </View>
           </Reveal>
 
-          <View style={styles.tabs}>
+          <View style={[styles.tabs, wrapTabs && styles.tabsWrapped]}>
             {TABS.map((item) => {
               const active = tab === item.id;
               return (
-                <View key={item.id} style={{ flex: 1 }}>
+                <View key={item.id} style={wrapTabs ? styles.tabThird : styles.tabFlexible}>
                   <PressableScale onPress={() => setTab(item.id)}>
                     <View style={styles.tab}>
                       <Icon name={item.icon} size={17} color={active ? scheme.hi : palette.faint} strokeWidth={1.6} />
@@ -169,7 +171,7 @@ export function WorldScreen({ store }: { store: ParallelStore }) {
           </View>
         </ScrollView>
 
-        {tab !== 'god' ? (
+        {tab === 'overview' ? (
           <View style={styles.orbFloat} pointerEvents="box-none">
             <DeityOrb
               accent={universe.accent}
@@ -576,6 +578,9 @@ const styles = StyleSheet.create({
     borderColor: palette.lineSoft,
     paddingVertical: 4,
   },
+  tabsWrapped: { flexWrap: 'wrap' },
+  tabThird: { width: '33.33%' },
+  tabFlexible: { flex: 1 },
   tab: { alignItems: 'center', gap: 4, paddingVertical: 8 },
   tabLabel: { fontFamily: font.bodySemi, fontSize: 12.5, letterSpacing: 0.5, color: palette.faint },
   tabMark: { width: 14, height: 2, borderRadius: 2, marginTop: 2 },
