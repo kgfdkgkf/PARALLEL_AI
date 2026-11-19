@@ -15,6 +15,7 @@ export function isPlayableHypothesis(input: string): boolean {
 const STOP_WORDS = new Set([
   'люди', 'человек', 'могли', 'можно', 'всегда', 'никогда', 'каждый', 'каждого', 'стала', 'стало',
   'стали', 'перестали', 'больше', 'вместо', 'который', 'мире', 'были', 'было', 'только',
+  'свои', 'своих', 'своей', 'могут', 'почему', 'чтобы',
 ]);
 
 export function premiseAnchors(input: string): string[] {

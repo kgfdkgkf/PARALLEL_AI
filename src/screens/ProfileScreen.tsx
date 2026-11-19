@@ -128,7 +128,7 @@ export function ProfileScreen({ store }: { store: ParallelStore }) {
               <Text style={styles.aiTitle}>Кто пишет миры</Text>
               <Text style={styles.aiText}>
                 Локальный движок работает всегда. Чтобы миры, события и реплики писала настоящая модель, выберите
-                провайдера и вставьте бесплатный ключ — он останется только на этом устройстве.
+                провайдера и введи его ключ или адрес своего сервера.
               </Text>
               <View style={styles.providerRow}>
                 {providerOrder.map((id) => {
@@ -192,10 +192,14 @@ export function ProfileScreen({ store }: { store: ParallelStore }) {
                       })}
                     </View>
                   ) : null}
+                </View>
+              ) : null}
+              {provider.model ? (
+                <View style={{ gap: 8, marginTop: 14 }}>
                   <Text style={styles.aiLabel}>МОДЕЛЬ</Text>
                   <TextInput
                     value={store.aiSettings.model}
-                    onChangeText={(model) => store.updateAiSettings({ model })}
+                    onChangeText={(model) => { setCheckMessage(null); store.updateAiSettings({ model }); }}
                     placeholder={provider.model}
                     placeholderTextColor={palette.faint}
                     autoCapitalize="none"
@@ -205,6 +209,22 @@ export function ProfileScreen({ store }: { store: ParallelStore }) {
                 </View>
               ) : null}
 
+              {provider.id === 'backend' ? (
+                <View style={{ gap: 8, marginTop: 14 }}>
+                  <Text style={styles.aiLabel}>АДРЕС AI-СЕРВЕРА</Text>
+                  <TextInput
+                    value={store.aiSettings.backendServer}
+                    onChangeText={(backendServer) => { setCheckMessage(null); store.updateAiSettings({ backendServer }); }}
+                    accessibilityLabel="Адрес AI-сервера"
+                    placeholder="https://ваш-сервер"
+                    placeholderTextColor={palette.faint}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    keyboardType="url"
+                    style={styles.aiInput}
+                  />
+                </View>
+              ) : null}
               <Text style={styles.aiHint}>{provider.hint}</Text>
               {provider.docsUrl ? <Text style={styles.aiLink}>{provider.docsUrl}</Text> : null}
 

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Image, StyleSheet, Text, View } from 'react-native';
+import { aiServerUrl } from '../engine/ai';
 import type { Character, Location, Universe } from '../engine/types';
 import { accents, font, palette, radius, type AccentKey } from '../theme';
 import { GhostButton } from './ui';
@@ -10,13 +11,8 @@ const cache = new Map<string, string>();
 const inProgress = new Map<string, Promise<string>>();
 
 export function illustrationEndpoint(server: string): string | null {
-  try {
-    const base = new URL(server.trim() || process.env.EXPO_PUBLIC_API_URL || '');
-    if (!['http:', 'https:'].includes(base.protocol) || base.username || base.password || base.search || base.hash) return null;
-    return base.href.replace(/\/+$/, '') + '/v1/illustrations';
-  } catch {
-    return null;
-  }
+  const base = aiServerUrl(server);
+  return base ? base + '/v1/illustrations' : null;
 }
 
 export function illustrationBrief(universe: Universe, subject: Character | Location): string {

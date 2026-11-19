@@ -32,19 +32,25 @@ import type {
   WorldState,
 } from './types';
 
-const BACKEND = (process.env.EXPO_PUBLIC_API_URL ?? '').replace(/\/$/, '');
-export const backendConfigured = BACKEND.length > 0;
-export const backendLabel = BACKEND.replace(/^https?:\/\//, '');
+export function aiServerUrl(value: string): string {
+  try {
+    const url = new URL(value.trim() || process.env.EXPO_PUBLIC_API_URL || '');
+    if (!['https:', 'http:'].includes(url.protocol) || url.username || url.password || url.search || url.hash) return '';
+    return url.href.replace(/\/+$/, '');
+  } catch {
+    return '';
+  }
+}
 
 export class AiError extends Error {}
 
 export function aiReady(settings: AiSettings): boolean {
-  return isAiReady(settings, BACKEND);
+  return isAiReady(settings, aiServerUrl(settings.backendServer));
 }
 
 export function providerLabel(settings: AiSettings): string {
   const provider = providerOf(settings);
-  if (provider.id === 'backend') return backendLabel || 'свой сервер';
+  if (provider.id === 'backend') return aiServerUrl(settings.backendServer).replace(/^https?:\/\//, '') || 'свой сервер';
   return provider.label;
 }
 
@@ -169,10 +175,12 @@ async function directChat(settings: AiSettings, system: string, user: string, op
   }
 }
 
-async function backendPost<T>(path: string, body: unknown, timeoutMs: number): Promise<T> {
+async function backendPost<T>(settings: AiSettings, path: string, body: unknown, timeoutMs: number): Promise<T> {
+  const server = aiServerUrl(settings.backendServer);
+  if (!server) throw new AiError('Введи адрес AI-сервера в профиле.');
   const timeout = withTimeout(timeoutMs);
   try {
-    const response = await fetch(`${BACKEND}${path}`, {
+    const response = await fetch(`${server}${path}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
@@ -285,10 +293,10 @@ export async function testProvider(settings: AiSettings): Promise<{ ok: boolean;
   const started = Date.now();
   try {
     if (providerOf(settings).id === 'backend') {
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), 8000);
-      const response = await fetch(`${BACKEND}/health`, { signal: controller.signal });
-      clearTimeout(timer);
+      const server = aiServerUrl(settings.backendServer);
+      if (!server) throw new AiError('Введи адрес AI-сервера в профиле.');
+      const timeout = withTimeout(8000);
+      const response = await fetch(`${server}/health`, { signal: timeout.signal }).finally(timeout.done);
       if (!response.ok) throw new AiError(`Сервер ответил ${response.status}`);
       const data = (await response.json()) as { ai_configured?: boolean; model?: string };
       if (data.ai_configured === false) throw new AiError('Сервер запущен, но ключ модели не задан в backend/.env');
@@ -504,7 +512,7 @@ export function universeFromWire(wire: WireWorld, question: string): Universe | 
     const premise = str(wire.premise);
     if (!title || !rule || !premise) return null;
     const anchors = premiseAnchors(question);
-    if (anchorMatches(anchors, rule) < Math.min(3, Math.ceil(anchors.length * 0.67))) return null;
+    if (anchorMatches(anchors, rule) < Math.min(3, Math.ceil(anchors.length * 0.6))) return null;
     const laws = lawsFrom(strArray(wire.laws, 5));
     if (laws.length !== 5 || new Set(laws.map((item) => item.text.toLowerCase())).size !== 5) return null;
 
@@ -653,7 +661,7 @@ export function summarize(universe: Universe): UniverseBrief {
 
 export async function generateUniverseAI(question: string, settings: AiSettings): Promise<Universe> {
   if (providerOf(settings).id === 'backend') {
-    const response = await backendPost<{ universe?: WireWorld }>('/v1/universes/generate', { question }, 120000);
+    const response = await backendPost<{ universe?: WireWorld }>(settings, '/v1/universes/generate', { question }, 120000);
     const universe = response.universe ? universeFromWire(response.universe, question) : null;
     if (!universe) throw new AiError('Модель вернула неполный мир или изменила гипотезу.');
     return universe;
@@ -689,6 +697,7 @@ export async function nextDecisionAI(universe: Universe, settings: AiSettings): 
 
   if (providerOf(settings).id === 'backend') {
     const response = await backendPost<{ decision?: WireDecision }>(
+      settings,
       `/v1/universes/${universe.id}/decisions`,
       { universe: brief, turn: brief.turn + 1 },
       90000,
@@ -720,6 +729,7 @@ export async function chatAI(
 
   if (providerOf(settings).id === 'backend') {
     const response = await backendPost<{ text?: unknown }>(
+      settings,
       `/v1/universes/${universe.id}/chat`,
       { universe: brief, character: { name: characterName, role: characterRole }, message, history: history.slice(-8) },
       45000,

@@ -209,7 +209,8 @@ export function buildGenesisPack(question: string): ThemePack {
     ...take(random, CULTURE_POOL, 4),
   ]);
 
-  const castSeeds = take(random, NAMES, 3);
+  const stances: Stance[] = ['liberty', 'control', 'transcend'];
+  const castSeeds = stances.map((stance) => pick(random, NAMES.filter((person) => person.stance === stance)));
   const cast: CastSeed[] = castSeeds.map((seed, index) => {
     const bio = pick(random, BIO_TEMPLATE)(topic);
     return {

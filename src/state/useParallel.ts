@@ -124,7 +124,7 @@ export function useParallel() {
     const next = { ...previous, ...patch };
     aiSettingsRef.current = next;
     setAiSettings(next);
-    if (next.provider !== previous.provider || next.key !== previous.key || next.model !== previous.model) {
+    if (next.provider !== previous.provider || next.key !== previous.key || next.model !== previous.model || next.backendServer !== previous.backendServer) {
       checkToken.current += 1;
       setAiStatus('unknown');
       setAiError(null);

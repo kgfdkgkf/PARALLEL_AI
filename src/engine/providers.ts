@@ -39,10 +39,10 @@ export const PROVIDERS: Record<ProviderId, ProviderConfig> = {
     label: 'Google Gemini',
     short: 'GEMINI',
     baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
-    model: 'gemini-2.0-flash',
+    model: 'gemini-3.5-flash-lite',
     needsKey: true,
     supportsJsonMode: false,
-    hint: 'Бесплатный ключ: aistudio.google.com/apikey → Create API key. Щедрый бесплатный лимит.',
+    hint: 'Ключ Gemini можно создать в Google AI Studio. Доступность зависит от региона и тарифа.',
     docsUrl: 'https://aistudio.google.com/apikey',
   },
   groq: {
@@ -53,7 +53,7 @@ export const PROVIDERS: Record<ProviderId, ProviderConfig> = {
     model: 'openai/gpt-oss-120b',
     needsKey: true,
     supportsJsonMode: true,
-    hint: 'Бесплатный ключ: console.groq.com/keys. Модель openai/gpt-oss-120b отвечает за 5–8 секунд и стабильно отдаёт JSON.',
+    hint: 'Ключ Groq можно создать в Groq Console. Модели GPT-OSS поддерживают структурированные ответы.',
     docsUrl: 'https://console.groq.com/keys',
   },
   openrouter: {
@@ -61,10 +61,10 @@ export const PROVIDERS: Record<ProviderId, ProviderConfig> = {
     label: 'OpenRouter',
     short: 'OPENROUTER',
     baseUrl: 'https://openrouter.ai/api/v1/chat/completions',
-    model: 'deepseek/deepseek-chat-v3-0324:free',
+    model: 'openrouter/free',
     needsKey: true,
     supportsJsonMode: true,
-    hint: 'Бесплатный ключ: openrouter.ai/keys. Модели с суффиксом :free стоят 0.',
+    hint: 'Ключ OpenRouter можно создать в настройках аккаунта. Роутер openrouter/free выбирает доступную бесплатную модель.',
     docsUrl: 'https://openrouter.ai/keys',
   },
   deepseek: {
@@ -75,7 +75,7 @@ export const PROVIDERS: Record<ProviderId, ProviderConfig> = {
     model: 'deepseek-chat',
     needsKey: true,
     supportsJsonMode: true,
-    hint: 'Прямой API DeepSeek: ключ на platform.deepseek.com. Бесплатного тарифа нет, но цены очень низкие. Полностью бесплатный вариант — OpenRouter, модель deepseek/deepseek-chat-v3-0324:free.',
+    hint: 'Прямое подключение к DeepSeek. Ключ создаётся на платформе DeepSeek.',
     docsUrl: 'https://platform.deepseek.com/api_keys',
   },
   local: {
@@ -97,7 +97,7 @@ export const PROVIDERS: Record<ProviderId, ProviderConfig> = {
     model: '',
     needsKey: false,
     supportsJsonMode: true,
-    hint: 'FastAPI из папки backend/. Адрес задаётся в EXPO_PUBLIC_API_URL, ключ модели живёт на сервере.',
+    hint: 'FastAPI из папки backend/. Введи адрес сервера. Ключ модели хранится на сервере.',
     docsUrl: '',
   },
 };
@@ -107,6 +107,7 @@ export type AiSettings = {
   key: string;
   model: string;
   imageServer: string;
+  backendServer: string;
 };
 
 const ENV_PROVIDER = (process.env.EXPO_PUBLIC_AI_PROVIDER ?? '').trim() as ProviderId;
@@ -117,6 +118,7 @@ export const DEFAULT_SETTINGS: AiSettings = {
   key: '',
   model: ENV_MODEL,
   imageServer: '',
+  backendServer: '',
 };
 
 /** Готовые модели на выбор: одна кнопка вместо ввода имени. */
@@ -125,7 +127,7 @@ export const MODEL_PRESETS: Partial<Record<ProviderId, { label: string; model: s
     { label: 'gpt-oss-120b', model: 'openai/gpt-oss-120b' },
     { label: 'gpt-oss-20b', model: 'openai/gpt-oss-20b' },
   ],
-  openrouter: [{ label: 'deepseek v3 :free', model: 'deepseek/deepseek-chat-v3-0324:free' }],
+  openrouter: [{ label: 'Free Router', model: 'openrouter/free' }],
 };
 
 export function providerOf(settings: AiSettings): ProviderConfig {

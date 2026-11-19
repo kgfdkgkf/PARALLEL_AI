@@ -13,6 +13,7 @@ export async function loadAiSettings(): Promise<AiSettings> {
       key: typeof parsed.key === 'string' ? parsed.key : '',
       model: typeof parsed.model === 'string' ? parsed.model : '',
       imageServer: typeof parsed.imageServer === 'string' ? parsed.imageServer : '',
+      backendServer: typeof parsed.backendServer === 'string' ? parsed.backendServer : '',
     };
   } catch {
     return DEFAULT_SETTINGS;
