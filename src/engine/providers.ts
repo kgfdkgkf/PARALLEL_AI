@@ -106,22 +106,17 @@ export type AiSettings = {
   provider: ProviderId;
   key: string;
   model: string;
+  imageServer: string;
 };
 
 const ENV_PROVIDER = (process.env.EXPO_PUBLIC_AI_PROVIDER ?? '').trim() as ProviderId;
-const ENV_KEY = (process.env.EXPO_PUBLIC_AI_KEY ?? '').trim();
 const ENV_MODEL = (process.env.EXPO_PUBLIC_AI_MODEL ?? '').trim();
 
-/**
- * Значения по умолчанию можно «вшить» в сборку через EXPO_PUBLIC_AI_*.
- * Это удобно для демо-APK, но ключ в таком случае лежит внутри пакета:
- * для публикации такой сборки ключ нужно перевыпустить и убрать из env.
- */
-export const embeddedKey = ENV_KEY;
 export const DEFAULT_SETTINGS: AiSettings = {
-  provider: ENV_PROVIDER && PROVIDERS[ENV_PROVIDER] ? ENV_PROVIDER : 'demo',
-  key: ENV_KEY,
+  provider: Object.hasOwn(PROVIDERS, ENV_PROVIDER) ? ENV_PROVIDER : 'demo',
+  key: '',
   model: ENV_MODEL,
+  imageServer: '',
 };
 
 /** Готовые модели на выбор: одна кнопка вместо ввода имени. */
@@ -134,7 +129,7 @@ export const MODEL_PRESETS: Partial<Record<ProviderId, { label: string; model: s
 };
 
 export function providerOf(settings: AiSettings): ProviderConfig {
-  return PROVIDERS[settings.provider] ?? PROVIDERS.demo;
+  return Object.hasOwn(PROVIDERS, settings.provider) ? PROVIDERS[settings.provider] : PROVIDERS.demo;
 }
 
 export function modelOf(settings: AiSettings): string {

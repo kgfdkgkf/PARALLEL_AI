@@ -16,7 +16,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import * as Speech from 'expo-speech';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Atmosphere } from '../components/Atmosphere';
-import { AiCover } from '../components/AiCover';
+import { Illustration, illustrationBrief } from '../components/Illustration';
 import { CharacterPortrait } from '../components/Portraits';
 import { Divider, Icon, IconButton, Mono, Overline, Pill, PressableScale, Reveal } from '../components';
 import { dativeName } from '../engine/chat';
@@ -126,7 +126,6 @@ export function CharacterScreen({ store }: { store: ParallelStore }) {
           >
             <View style={styles.identityArt}>
               <Image source={covers[universe.cover]} resizeMode="cover" style={[fillImage, { opacity: 0.32 }]} />
-              <AiCover universe={universe} style={{ opacity: 0.34 }} />
               <LinearGradient
                 colors={['rgba(6,5,14,0.35)', 'rgba(6,5,14,0.92)', palette.ink]}
                 locations={[0, 0.62, 1]}
@@ -151,6 +150,13 @@ export function CharacterScreen({ store }: { store: ParallelStore }) {
                   </View>
                 </View>
               </View>
+            </Reveal>
+
+            <Reveal delay={70} style={{ marginTop: 12 }}>
+              <Illustration
+                kind="portrait" server={store.aiSettings.imageServer} description={illustrationBrief(universe, character)}
+                label={character.name} accent={character.accent} onConfigure={() => store.go('profile')}
+              />
             </Reveal>
 
             <Reveal delay={90}>

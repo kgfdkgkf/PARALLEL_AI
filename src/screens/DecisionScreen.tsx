@@ -5,7 +5,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { NarrationButton } from '../components/NarrationButton';
 import { Atmosphere, Halo } from '../components/Atmosphere';
-import { AiCover } from '../components/AiCover';
 import { BrandMark } from '../components/Cover';
 import { METRIC_META } from '../components/Metrics';
 import { Divider, GhostButton, Icon, IconButton, Mono, Pill, PressableScale, PrimaryButton, Reveal, SectionLabel, Signet } from '../components';
@@ -111,7 +110,6 @@ export function DecisionScreen({ store }: { store: ParallelStore }) {
 
           <View style={styles.cover}>
             <Image source={covers[universe.cover]} resizeMode="cover" style={fillImage} />
-            <AiCover universe={universe} />
             <LinearGradient
               colors={['rgba(5,5,12,0.42)', palette.ink]}
               locations={[0, 1]}

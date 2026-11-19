@@ -2,9 +2,9 @@ import React, { useMemo, useState } from 'react';
 import { Image, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Illustration, illustrationBrief } from '../components/Illustration';
 import { NarrationButton } from '../components/NarrationButton';
 import { Atmosphere } from '../components/Atmosphere';
-import { AiCover } from '../components/AiCover';
 import { Signet } from '../components/Avatar';
 import { CharacterPortrait, LocationArt } from '../components/Portraits';
 import { MapSheet, WorldMap } from '../components/WorldMap';
@@ -89,7 +89,6 @@ export function WorldScreen({ store }: { store: ParallelStore }) {
           <Reveal>
             <View style={styles.hero}>
               <Image source={covers[universe.cover]} resizeMode="cover" style={fillImage} />
-              <AiCover universe={universe} />
               <LinearGradient
                 colors={['rgba(5,5,12,0.62)', 'rgba(5,5,12,0.66)', palette.ink]}
                 locations={[0, 0.55, 1]}
@@ -384,6 +383,14 @@ function MapTab({ universe, store }: { universe: Universe; store: ParallelStore 
           characterName={resident?.name}
           onOpenCharacter={resident ? () => store.openCharacter(resident.id) : undefined}
           seed={universe.seed}
+          renderArt={(fallback) => (
+            <Illustration
+              kind="location" server={store.aiSettings.imageServer} description={illustrationBrief(universe, location)}
+              label={location.name} accent={location.accent} onConfigure={() => store.go('profile')}
+            >
+              {fallback}
+            </Illustration>
+          )}
           onExplore={() => store.explore(location.id)}
           explored={location.visitedTurn === universe.state.turn}
         />

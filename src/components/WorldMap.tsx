@@ -194,6 +194,7 @@ export function MapSheet({
   onExplore,
   explored,
   seed,
+  renderArt,
 }: {
   location: Location;
   accent?: AccentKey;
@@ -202,19 +203,22 @@ export function MapSheet({
   onExplore?: () => void;
   explored?: boolean;
   seed?: number;
+  renderArt?: (fallback: React.ReactNode) => React.ReactNode;
 }) {
   const scheme = accents[accent];
   const { width: screenWidth } = useWindowDimensions();
-  return (
-    <View style={[styles.sheet, { borderColor: scheme.core + '3D' }]}>
-      <LocationArt
+  const fallback = (
+    <LocationArt
         name={location.name}
         seed={seed}
         accent={location.accent}
         width={Math.min(screenWidth - 72, 440)}
         height={92}
-        style={{ marginTop: -16, marginHorizontal: -16, marginBottom: 4 }}
-      />
+    />
+  );
+  return (
+    <View style={[styles.sheet, { borderColor: scheme.core + '3D' }]}>
+      {renderArt ? renderArt(fallback) : fallback}
       <View style={styles.sheetTop}>
         <View style={{ flex: 1, gap: 4 }}>
           <Overline color={scheme.text}>{location.kind}</Overline>

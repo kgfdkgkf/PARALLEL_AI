@@ -24,6 +24,11 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
+if __package__:
+    from .image_core import router as image_router
+else:
+    from image_core import router as image_router
+
 try:  # необязательно: удобно для локального .env
     from dotenv import load_dotenv
 
@@ -47,6 +52,7 @@ def ai_configured() -> bool:
 
 
 app = FastAPI(title="PARALLEL AI Core", version="2.0.0")
+app.include_router(image_router)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=APP_ORIGINS or ["*"],

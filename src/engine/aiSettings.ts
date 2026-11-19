@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { DEFAULT_SETTINGS, type AiSettings, type ProviderId } from './providers';
+import { DEFAULT_SETTINGS, PROVIDERS, type AiSettings, type ProviderId } from './providers';
 
 const KEY = 'parallel.ai.settings.v1';
 
@@ -9,9 +9,10 @@ export async function loadAiSettings(): Promise<AiSettings> {
     if (!raw) return DEFAULT_SETTINGS;
     const parsed = JSON.parse(raw) as Partial<AiSettings>;
     return {
-      provider: (parsed.provider as ProviderId) ?? DEFAULT_SETTINGS.provider,
+      provider: typeof parsed.provider === 'string' && Object.hasOwn(PROVIDERS, parsed.provider) ? parsed.provider as ProviderId : DEFAULT_SETTINGS.provider,
       key: typeof parsed.key === 'string' ? parsed.key : '',
       model: typeof parsed.model === 'string' ? parsed.model : '',
+      imageServer: typeof parsed.imageServer === 'string' ? parsed.imageServer : '',
     };
   } catch {
     return DEFAULT_SETTINGS;

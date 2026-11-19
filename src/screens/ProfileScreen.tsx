@@ -5,7 +5,7 @@ import { Atmosphere } from '../components/Atmosphere';
 import { BottomNav } from '../components/BottomNav';
 import { Signet } from '../components/Avatar';
 import { Divider, GhostButton, Icon, Mono, Overline, Pill, PressableScale, Reveal, SectionLabel } from '../components';
-import { MODEL_PRESETS, PROVIDERS, embeddedKey, type ProviderId } from '../engine/providers';
+import { MODEL_PRESETS, PROVIDERS, type ProviderId } from '../engine/providers';
 import { accents, font, palette, radius } from '../theme';
 import type { ParallelStore } from '../state/useParallel';
 
@@ -138,7 +138,7 @@ export function ProfileScreen({ store }: { store: ParallelStore }) {
                       key={id}
                       onPress={() => {
                         setCheckMessage(null);
-                        store.updateAiSettings({ provider: id, model: '' });
+                        if (id !== store.aiSettings.provider) store.updateAiSettings({ provider: id, model: '', key: '' });
                       }}
                     >
                       <View style={[styles.providerChip, active && styles.providerChipActive]}>
@@ -167,11 +167,6 @@ export function ProfileScreen({ store }: { store: ParallelStore }) {
                     autoCorrect={false}
                     style={styles.aiInput}
                   />
-                  {embeddedKey && store.aiSettings.key.trim() === embeddedKey ? (
-                    <Text style={styles.aiWarning}>
-                      Ключ встроен в эту сборку для демонстрации. Перед публикацией перевыпустите его.
-                    </Text>
-                  ) : null}
                   {store.aiSettings.key.trim().length > 8 ? (
                     <Text style={styles.aiSaved}>
                       Ключ сохранён на этом устройстве: ····{store.aiSettings.key.trim().slice(-4)}
@@ -252,6 +247,27 @@ export function ProfileScreen({ store }: { store: ParallelStore }) {
                   миры писала модель.
                 </Text>
               ) : null}
+            </View>
+          </Reveal>
+
+          <Reveal delay={205} style={{ marginTop: 22 }}>
+            <SectionLabel accent="cyan">иллюстрации</SectionLabel>
+            <View style={styles.aiCard}>
+              <Text style={styles.aiTitle}>Сервер иллюстраций</Text>
+              <Text style={styles.aiText}>
+                Подключи сервер PARALLEL с настроенной моделью. По запросу он нарисует место или жителя по описанию из игры.
+              </Text>
+              <TextInput
+                value={store.aiSettings.imageServer}
+                onChangeText={(imageServer) => store.updateAiSettings({ imageServer })}
+                accessibilityLabel="Адрес сервера иллюстраций"
+                placeholder="https://ваш-сервер"
+                placeholderTextColor={palette.faint}
+                autoCapitalize="none"
+                autoCorrect={false}
+                keyboardType="url"
+                style={styles.aiInput}
+              />
             </View>
           </Reveal>
 

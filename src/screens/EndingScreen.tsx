@@ -5,7 +5,6 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { LinearGradient } from 'expo-linear-gradient';
 import { NarrationButton } from '../components/NarrationButton';
 import { Atmosphere } from '../components/Atmosphere';
-import { AiCover } from '../components/AiCover';
 import { MetricBars, MetricRadar } from '../components/Metrics';
 import { Divider, GhostButton, Icon, IconButton, Mono, Overline, Pill, PrimaryButton, Reveal, SectionLabel } from '../components';
 import { accents, covers, fillImage, font, palette, radius } from '../theme';
@@ -38,7 +37,6 @@ export function EndingScreen({ store }: { store: ParallelStore }) {
         <ScrollView contentContainerStyle={{ paddingBottom: 180 }} showsVerticalScrollIndicator={false}>
           <View style={styles.hero}>
             <Image source={covers[universe.cover]} resizeMode="cover" style={fillImage} />
-            <AiCover universe={universe} />
             <LinearGradient
               colors={['rgba(4,4,10,0.5)', 'rgba(4,4,10,0.82)', palette.ink]}
               locations={[0, 0.6, 1]}
