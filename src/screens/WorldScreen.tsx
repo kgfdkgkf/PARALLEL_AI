@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Image, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import * as Speech from 'expo-speech';
+import { NarrationButton } from '../components/NarrationButton';
 import { Atmosphere } from '../components/Atmosphere';
 import { AiCover } from '../components/AiCover';
 import { Signet } from '../components/Avatar';
@@ -38,6 +38,7 @@ const TABS: { id: TabKey; label: string; icon: 'compass' | 'map' | 'people' | 't
 
 export function WorldScreen({ store }: { store: ParallelStore }) {
   const [tab, setTab] = useState<TabKey>('overview');
+  const insets = useSafeAreaInsets();
   const universe = store.active;
   if (!universe) {
     return (
@@ -51,7 +52,6 @@ export function WorldScreen({ store }: { store: ParallelStore }) {
   }
 
   const scheme = accents[universe.accent];
-  const insets = useSafeAreaInsets();
   const { state } = universe;
   const ending = state.ending;
   const activeLocationId = store.selectedLocation?.id ?? null;
@@ -200,20 +200,9 @@ function Overview({ universe, store, onOpenMap }: { universe: Universe; store: P
           <Text style={styles.ruleText}>{universe.rule}</Text>
         </View>
         <Text style={styles.premise}>{universe.premise}</Text>
-        <PressableScale
-          onPress={() => {
-            try {
-              Speech.stop();
-              Speech.speak(universe.title + '. ' + universe.premise, { language: 'ru-RU', rate: 0.95, pitch: 0.9 });
-            } catch {}
-          }}
-        >
-          <View style={styles.listenRow}>
-            <Icon name="sound" size={14} color={scheme.hi} />
-            <Text style={[styles.listenText, { color: scheme.text }]}>Слушать мир</Text>
-            <Mono>голосом системы</Mono>
-          </View>
-        </PressableScale>
+        <View style={{ marginTop: 12 }}>
+          <NarrationButton text={[universe.title, universe.rule, universe.premise].join('. ')} label="Слушать мир" accent={universe.accent} />
+        </View>
         {universe.signature ? (
           <View style={[styles.signatureCard, { borderColor: scheme.core + '40' }]}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
@@ -379,6 +368,7 @@ function MapTab({ universe, store }: { universe: Universe; store: ParallelStore 
           <Overline color={accents[scene.accent].text}>{scene.locationName}</Overline>
           <Text style={styles.sceneTitle}>{scene.title}</Text>
           <Text style={styles.sceneText}>{scene.text}</Text>
+          <NarrationButton text={scene.title + '. ' + scene.text} label="Озвучить сцену" accent={scene.accent} />
           <View style={styles.sceneFoot}>
             <Pill accent={scene.accent}>{scene.effectLabel}</Pill>
             <PressableScale onPress={store.clearScene}>
@@ -580,19 +570,6 @@ const styles = StyleSheet.create({
   ruleMark: { fontFamily: font.display, fontSize: 22, lineHeight: 30 },
   ruleText: { flex: 1, fontFamily: font.bodySemi, fontSize: 15, lineHeight: 26, color: palette.text },
   premise: { fontFamily: font.body, fontSize: 15, lineHeight: 25, color: palette.muted, marginTop: 14 },
-  listenRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginTop: 14,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    borderRadius: radius.pill,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: palette.line,
-    backgroundColor: 'rgba(255,255,255,0.03)',
-  },
-  listenText: { flex: 1, fontFamily: font.bodySemi, fontSize: 13 },
   signatureCard: {
     marginTop: 16,
     padding: 16,

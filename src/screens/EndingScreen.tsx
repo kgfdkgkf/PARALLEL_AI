@@ -3,6 +3,7 @@ import { Share } from 'react-native';
 import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { NarrationButton } from '../components/NarrationButton';
 import { Atmosphere } from '../components/Atmosphere';
 import { AiCover } from '../components/AiCover';
 import { MetricBars, MetricRadar } from '../components/Metrics';
@@ -61,6 +62,7 @@ export function EndingScreen({ store }: { store: ParallelStore }) {
           </View>
 
           <View style={{ paddingHorizontal: 20 }}>
+            <NarrationButton text={[ending.title, ending.epigraph, ...ending.body].join(' ')} label="Озвучить финал" accent={ending.accent} />
             {ending.body.map((paragraph, index) => (
               <Reveal key={index} delay={120 + index * 90}>
                 <Text style={styles.paragraph}>{paragraph}</Text>

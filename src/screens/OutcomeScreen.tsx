@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { Animated, Easing, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Defs, RadialGradient, Stop } from 'react-native-svg';
+import { NarrationButton } from '../components/NarrationButton';
 import { Atmosphere, Halo } from '../components/Atmosphere';
 import { Signet } from '../components/Avatar';
 import { METRIC_META } from '../components/Metrics';
@@ -85,6 +86,7 @@ export function OutcomeScreen({ store }: { store: ParallelStore }) {
             <Reveal delay={120}>
               <Text style={styles.headline}>{outcome.option.headline}</Text>
               <Text style={styles.explanation}>{outcome.option.explanation}</Text>
+              <NarrationButton text={[outcome.option.headline, outcome.option.explanation, ...outcome.option.ripple].join(' ')} label="Озвучить последствия" accent={universe.accent} />
               {outcome.allyName ? (
                 <Text style={styles.allyLine}>{outcome.allyName} открыто поддержал это решение.</Text>
               ) : null}

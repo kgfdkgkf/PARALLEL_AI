@@ -3,6 +3,7 @@ import { ActivityIndicator, Image, Platform, ScrollView, StyleSheet, Text, View 
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
+import { NarrationButton } from '../components/NarrationButton';
 import { Atmosphere, Halo } from '../components/Atmosphere';
 import { AiCover } from '../components/AiCover';
 import { BrandMark } from '../components/Cover';
@@ -125,6 +126,9 @@ export function DecisionScreen({ store }: { store: ParallelStore }) {
           <View style={{ paddingHorizontal: 20, gap: 16 }}>
             <Reveal>
               <Text style={styles.context}>{decision.context}</Text>
+              <View style={{ marginTop: 12 }}>
+                <NarrationButton text={[decision.title, decision.context, decision.question].join('. ')} label="Озвучить событие" accent={universe.accent} />
+              </View>
             </Reveal>
 
             <Reveal delay={80}>
