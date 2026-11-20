@@ -107,7 +107,7 @@ export function DecisionScreen({ store }: { store: ParallelStore }) {
           {store.aiError && universe.mode === 'ai' ? (
             <View style={styles.aiNotice}>
               <Icon name="spark" size={12} color={palette.gold} />
-              <Text style={styles.aiNoticeText}>Модель не ответила — событие собрано локально. {store.aiError}</Text>
+              <Text style={styles.aiNoticeText}>Событие собрано локально. {store.aiError}</Text>
             </View>
           ) : null}
 

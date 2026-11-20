@@ -43,7 +43,7 @@ export function ForgeScreen({ store }: { store: ParallelStore }) {
 
   const progress = Math.min(1, store.forgeStage / STAGES.length);
   const waiting = progress === 1 && store.engineMode === 'ai';
-  const percent = Math.min(waiting ? 96 : 100, Math.round(progress * 100));
+  const percent = Math.round(progress * 100);
 
   return (
     <View style={{ flex: 1 }}>
@@ -51,7 +51,7 @@ export function ForgeScreen({ store }: { store: ParallelStore }) {
       <SafeAreaView style={{ flex: 1, paddingHorizontal: 24 }} edges={['top', 'bottom']}>
         <View style={{ alignItems: 'center', marginTop: 18 }}>
           <Overline color={scheme.text}>сборка реальности</Overline>
-          <Text style={styles.counter}>{String(percent).padStart(2, '0')}%</Text>
+          <Text style={styles.counter}>{waiting ? 'Ждём модель' : `${String(percent).padStart(2, '0')}%`}</Text>
         </View>
 
         <View style={{ alignItems: 'center', justifyContent: 'center', flex: 1 }}>
@@ -157,7 +157,7 @@ export function ForgeScreen({ store }: { store: ParallelStore }) {
             );
           })}
           <View style={styles.progressTrack}>
-            <View style={[styles.progressFill, { width: `${Math.max(4, percent)}%`, backgroundColor: scheme.core }]} />
+            <View style={[styles.progressFill, { width: `${waiting ? 70 : Math.max(4, percent)}%`, backgroundColor: scheme.core }]} />
           </View>
           {waiting ? <Text style={styles.note}>Модель ещё пишет мир. Уже можно начать с локальной версии.</Text> : null}
           <View style={{ gap: 6, marginTop: 10 }}>

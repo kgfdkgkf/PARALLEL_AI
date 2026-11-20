@@ -34,7 +34,8 @@ const { isPlayableHypothesis } = require('../src/engine/hypothesis');
 const { advanceLife, WORLD_DAY_MS, MAX_MISSED_DAYS } = require('../src/engine/life');
 const { exploreLocation } = require('../src/engine/explore');
 const { bless, curse, faithOf, POWERS, useDivinePower } = require('../src/engine/divine');
-const { decisionFromWire, universeFromWire } = require('../src/engine/ai');
+const { decisionFromWire, generateUniverseAI, universeFromWire } = require('../src/engine/ai');
+const { DEFAULT_SETTINGS } = require('../src/engine/providers');
 
 const gravity = 'Что, если бы гравитация зависела от памяти?';
 const rain = 'Что, если бы дождь шёл по расписанию?';
@@ -149,4 +150,29 @@ test('AI payload validation rejects unrelated worlds and duplicate options', () 
   const decision = world.state.pending;
   assert.equal(decisionFromWire({ ...decision, options: Array(3).fill(decision.options[0]) }, world.id, 1), null);
   assert.equal(decisionFromWire({ ...decision, options: [null, ...decision.options.slice(1)] }, world.id, 1), null);
+});
+
+test('world generation retries incomplete JSON and accepts the premise across both fields', async (context) => {
+  const question = 'Что если бы наш мир в 2026 году столкнулся с миром из игры Cyberpunk 2077?';
+  const local = createUniverse(question);
+  const wire = {
+    title: 'Два города',
+    rule: 'Технологии и люди проходят между двумя реальностями.',
+    premise: 'В 2026 году наша реальность столкнулась с миром Cyberpunk 2077.',
+    laws: local.state.laws.map((item) => item.text),
+    locations: local.state.locations,
+    characters: local.state.characters,
+  };
+  const requests = [];
+  context.mock.method(globalThis, 'fetch', async (_url, options) => {
+    requests.push(JSON.parse(options.body));
+    const content = requests.length === 1 ? '{"title":' : JSON.stringify({ universe: wire });
+    return Response.json({ choices: [{ message: { content } }] });
+  });
+
+  const world = await generateUniverseAI(question, { ...DEFAULT_SETTINGS, provider: 'local' });
+  assert.equal(world.mode, 'ai');
+  assert.equal(world.rule, wire.rule);
+  assert.equal(requests.length, 2);
+  assert.match(requests[1].messages[1].content, /некорректный JSON/);
 });

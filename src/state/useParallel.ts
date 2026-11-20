@@ -10,6 +10,7 @@ import { bless, curse, useDivinePower } from '../engine/divine';
 import { greetingFor, replyToCharacter, suggestedQuestions } from '../engine/chat';
 import {
   AiError,
+  AiResponseError,
   aiReady,
   chatAI,
   generateUniverseAI,
@@ -240,7 +241,7 @@ export function useParallel() {
       })
       .catch((error) => {
         if (stillWaiting() && showStatus()) {
-          setAiStatus('offline');
+          setAiStatus(error instanceof AiResponseError ? 'online' : 'offline');
           setAiError(error instanceof AiError ? error.message : 'Не удалось получить событие');
         }
       })
@@ -279,7 +280,7 @@ export function useParallel() {
     const request = aiReady(settings)
       ? generateUniverseAI(clean, settings).then(
           (world) => ({ world, error: null }),
-          (error: unknown) => ({ world: null, error: error instanceof AiError ? error.message : 'AI-ядро недоступно' }),
+          (error: unknown) => ({ world: null, error }),
         )
       : Promise.resolve({ world: null, error: null });
     for (const [index, time] of [260, 300, 350, 360].entries()) {
@@ -290,8 +291,8 @@ export function useParallel() {
     const { world, error } = await request;
     if (token !== forgeToken.current) return;
     if (world || error) {
-      setAiStatus(world ? 'online' : 'offline');
-      setAiError(error);
+      setAiStatus(world || error instanceof AiResponseError ? 'online' : 'offline');
+      setAiError(error instanceof AiError ? error.message : error ? 'AI-ядро недоступно' : null);
     }
     finishForge(world, clean, settings);
   }, [finishForge, go]);

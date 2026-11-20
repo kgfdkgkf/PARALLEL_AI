@@ -15,7 +15,7 @@ export function isPlayableHypothesis(input: string): boolean {
 const STOP_WORDS = new Set([
   'люди', 'человек', 'могли', 'можно', 'всегда', 'никогда', 'каждый', 'каждого', 'стала', 'стало',
   'стали', 'перестали', 'больше', 'вместо', 'который', 'мире', 'были', 'было', 'только',
-  'свои', 'своих', 'своей', 'могут', 'почему', 'чтобы',
+  'свои', 'своих', 'своей', 'могут', 'почему', 'чтобы', 'наш', 'нашего', 'мир', 'миром', 'году', 'год', 'игры',
 ]);
 
 export function premiseAnchors(input: string): string[] {
@@ -24,6 +24,7 @@ export function premiseAnchors(input: string): string[] {
 }
 
 export function anchorMatches(anchors: string[], text: string): number {
-  const words = text.toLowerCase().replace(/ё/g, 'е').match(/\p{L}+/gu) ?? [];
+  const words: string[] = text.toLowerCase().replace(/ё/g, 'е').match(/\p{L}+/gu) ?? [];
+  if (words.some((word) => word.startsWith('киберпанк'))) words.push('cyberpunk');
   return anchors.filter((anchor) => words.some((word) => word.startsWith(anchor))).length;
 }
