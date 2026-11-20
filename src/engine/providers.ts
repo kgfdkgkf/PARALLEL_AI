@@ -104,6 +104,7 @@ export const PROVIDERS: Record<ProviderId, ProviderConfig> = {
 
 export type AiSettings = {
   provider: ProviderId;
+  providerSelected?: boolean;
   key: string;
   model: string;
   imageServer: string;

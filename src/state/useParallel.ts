@@ -122,7 +122,8 @@ export function useParallel() {
 
   const updateAiSettings = useCallback((patch: Partial<AiSettings>) => {
     const previous = aiSettingsRef.current;
-    const next = { ...previous, ...patch };
+    const selectsProvider = patch.provider !== undefined || patch.key !== undefined || patch.model !== undefined;
+    const next = { ...previous, ...patch, providerSelected: selectsProvider || previous.providerSelected === true };
     aiSettingsRef.current = next;
     setAiSettings(next);
     if (next.provider !== previous.provider || next.key !== previous.key || next.model !== previous.model || next.backendServer !== previous.backendServer) {
