@@ -1,8 +1,9 @@
 import React, { useMemo, useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View, type TextInputProps } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Atmosphere, Halo } from '../components/Atmosphere';
 import { BottomNav } from '../components/BottomNav';
+import { useDesktopWeb } from '../components/useDesktopWeb';
 import { BrandMark } from '../components/Cover';
 import { Icon } from '../components/Icon';
 import { Divider, GhostButton, Mono, Overline, PressableScale, PrimaryButton, Reveal, SectionLabel } from '../components/ui';
@@ -29,6 +30,7 @@ const STEPS = [
 ];
 
 export function CreateScreen({ store }: { store: ParallelStore }) {
+  const desktop = useDesktopWeb();
   const [value, setValue] = useState(store.draftQuestion);
   const [focused, setFocused] = useState(false);
   const scheme = accents.violet;
@@ -42,9 +44,17 @@ export function CreateScreen({ store }: { store: ParallelStore }) {
     store.createWorld(trimmed);
   };
 
-  const randomPrompt = () => {
-    const pick = SUGGESTIONS[Math.floor(Math.random() * SUGGESTIONS.length)];
-    setValue(pick);
+  const updateDraft = (next: string) => {
+    setValue(next);
+    store.setDraftQuestion(next);
+  };
+
+  const handleShortcut: TextInputProps['onKeyPress'] = (event) => {
+    const key = event as unknown as React.KeyboardEvent<HTMLTextAreaElement>;
+    if (key.key === 'Enter' && (key.ctrlKey || key.metaKey) && !key.nativeEvent.isComposing && !key.repeat) {
+      key.preventDefault();
+      submit();
+    }
   };
 
   return (
@@ -53,15 +63,17 @@ export function CreateScreen({ store }: { store: ParallelStore }) {
       <SafeAreaView style={{ flex: 1 }} edges={['top']}>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
           <ScrollView
-            contentContainerStyle={{ paddingBottom: 140, paddingHorizontal: 20 }}
+            contentContainerStyle={desktop ? styles.desktopContent : styles.mobileContent}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
             <Reveal>
-              <View style={styles.topRow}>
-                <BrandMark size={34} />
-                <Mono>новая ветвь</Mono>
-              </View>
+              {!desktop ? (
+                <View style={styles.topRow}>
+                  <BrandMark size={34} />
+                  <Mono>новая ветвь</Mono>
+                </View>
+              ) : null}
               <Overline color={scheme.text} style={{ marginTop: 22 }}>
                 лаборатория гипотез
               </Overline>
@@ -71,63 +83,68 @@ export function CreateScreen({ store }: { store: ParallelStore }) {
               </Text>
             </Reveal>
 
-            <Reveal delay={120} style={{ marginTop: 24 }}>
-              <View style={[styles.composer, focused && { borderColor: scheme.core + '80' }]}>
-                {focused ? <Halo size={260} color={scheme.core + '22'} style={{ top: -60, right: -70 }} /> : null}
-                <Text style={styles.composerLabel}>А ЧТО, ЕСЛИ…</Text>
-                <TextInput
-                  value={value}
-                  onChangeText={(next) => {
-                    setValue(next);
-                    store.setDraftQuestion(next);
-                  }}
-                  onFocus={() => setFocused(true)}
-                  onBlur={() => setFocused(false)}
-                  multiline
-                  maxLength={180}
-                  placeholder="…люди никогда не умели лгать?"
-                  placeholderTextColor={palette.faint}
-                  selectionColor={scheme.core}
-                  style={styles.input}
-                />
-                <Divider style={{ marginTop: 12 }} />
-                <View style={styles.composerFoot}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                    <Icon name="spark" size={13} color={scheme.hi} />
-                    <Mono>{counter}</Mono>
-                  </View>
-                  <PressableScale onPress={randomPrompt}>
-                    <View style={styles.dice}>
-                      <Icon name="reset" size={12} color={palette.textSoft} />
-                      <Text style={styles.diceText}>случайная</Text>
+            <View style={desktop ? styles.desktopColumns : undefined}>
+              <View style={desktop ? styles.desktopComposer : undefined}>
+                <Reveal delay={120} style={{ marginTop: 24 }}>
+                  <View style={[styles.composer, focused && { borderColor: scheme.core + '80' }]}>
+                    {focused ? <Halo size={260} color={scheme.core + '22'} style={{ top: -60, right: -70 }} /> : null}
+                    <Text style={styles.composerLabel}>А ЧТО, ЕСЛИ…</Text>
+                    <TextInput
+                      value={value}
+                      onChangeText={updateDraft}
+                      onKeyPress={desktop ? handleShortcut : undefined}
+                      onFocus={() => setFocused(true)}
+                      onBlur={() => setFocused(false)}
+                      multiline
+                      maxLength={180}
+                      placeholder="…люди никогда не умели лгать?"
+                      placeholderTextColor={palette.faint}
+                      selectionColor={scheme.core}
+                      style={styles.input}
+                    />
+                    <Divider style={{ marginTop: 12 }} />
+                    <View style={styles.composerFoot}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                        <Icon name="spark" size={13} color={scheme.hi} />
+                        <Mono>{counter}</Mono>
+                      </View>
+                      <PressableScale onPress={() => updateDraft(SUGGESTIONS[Math.floor(Math.random() * SUGGESTIONS.length)])}>
+                        <View style={styles.dice}>
+                          <Icon name="reset" size={12} color={palette.textSoft} />
+                          <Text style={styles.diceText}>случайная</Text>
+                        </View>
+                      </PressableScale>
                     </View>
-                  </PressableScale>
+                  </View>
+                </Reveal>
+
+                <Reveal delay={200} style={{ marginTop: space.lg }}>
+                  <PrimaryButton title="СОЗДАТЬ РЕАЛЬНОСТЬ" icon="spark" onPress={submit} disabled={!valid} />
+                  {!valid ? <Text style={styles.hint}>Опиши одно конкретное изменение, например «дождь идёт по расписанию».</Text> : null}
+                  <Text style={styles.engineHint}>
+                    {store.engineMode === 'ai'
+                      ? `AI CORE · ${store.aiProvider}. Мир пишет модель.`
+                      : 'Сборка идёт на локальном DEMO CORE. Подключите API, чтобы миры писала модель.'}
+                  </Text>
+                  {desktop ? <Mono style={{ marginTop: 9 }}>Ctrl + Enter / ⌘ + Enter</Mono> : null}
+                </Reveal>
+              </View>
+
+              <View style={desktop ? styles.desktopSuggestions : undefined}>
+                <Reveal delay={280} style={{ marginTop: space.xl }}>
+                  <SectionLabel accent="gold">готовые гипотезы</SectionLabel>
+                </Reveal>
+                <View style={styles.suggestions}>
+                  {SUGGESTIONS.map((item, index) => (
+                    <PressableScale key={item} onPress={() => updateDraft(item)}>
+                      <View style={styles.suggestion}>
+                        <Text style={styles.suggestionIndex}>{String(index + 1).padStart(2, '0')}</Text>
+                        <Text style={styles.suggestionText}>{item}</Text>
+                      </View>
+                    </PressableScale>
+                  ))}
                 </View>
               </View>
-            </Reveal>
-
-            <Reveal delay={200} style={{ marginTop: space.lg }}>
-              <PrimaryButton title="СОЗДАТЬ РЕАЛЬНОСТЬ" icon="spark" onPress={submit} disabled={!valid} />
-              {!valid ? <Text style={styles.hint}>Опиши одно конкретное изменение, например «дождь идёт по расписанию».</Text> : null}
-              <Text style={styles.engineHint}>
-                {store.engineMode === 'ai'
-                  ? 'Сборка идёт через AI CORE: законы, история и жители пишутся моделью в реальном времени.'
-                  : 'Сборка идёт на локальном DEMO CORE. Подключите API, чтобы миры писала модель.'}
-              </Text>
-            </Reveal>
-
-            <Reveal delay={280} style={{ marginTop: space.xl }}>
-              <SectionLabel accent="gold">готовые гипотезы</SectionLabel>
-            </Reveal>
-            <View style={styles.suggestions}>
-              {SUGGESTIONS.map((item, index) => (
-                <PressableScale key={item} onPress={() => setValue(item)}>
-                  <View style={styles.suggestion}>
-                    <Text style={styles.suggestionIndex}>{String(index + 1).padStart(2, '0')}</Text>
-                    <Text style={styles.suggestionText}>{item}</Text>
-                  </View>
-                </PressableScale>
-              ))}
             </View>
 
             <Reveal delay={340} style={{ marginTop: space.xl }}>
@@ -160,6 +177,11 @@ export function CreateScreen({ store }: { store: ParallelStore }) {
 }
 
 const styles = StyleSheet.create({
+  mobileContent: { paddingBottom: 140, paddingHorizontal: 20 },
+  desktopContent: { paddingHorizontal: 34, paddingTop: 24, paddingBottom: 45 },
+  desktopColumns: { flexDirection: 'row', gap: 26 },
+  desktopComposer: { flex: 1, minWidth: 0 },
+  desktopSuggestions: { width: 290 },
   topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 8 },
   title: {
     fontFamily: font.display,

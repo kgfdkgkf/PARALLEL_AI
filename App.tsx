@@ -3,6 +3,8 @@ import { Animated, BackHandler, Easing, Platform, StatusBar, StyleSheet, Text, V
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useFonts } from 'expo-font';
 import { Atmosphere } from './src/components/Atmosphere';
+import { BottomNav } from './src/components/BottomNav';
+import { useDesktopWeb } from './src/components/useDesktopWeb';
 import { BrandMark } from './src/components/Cover';
 import { Onboarding } from './src/components/Onboarding';
 import { Mono } from './src/components/ui';
@@ -53,22 +55,25 @@ function BootSplash() {
   );
 }
 
-function Scene({ screen, children }: { screen: Screen; children: React.ReactNode }) {
+function Scene({ screen, desktop, children }: { screen: Screen; desktop: boolean; children: React.ReactNode }) {
   const progress = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
+    if (desktop) return;
     progress.setValue(0);
-    Animated.timing(progress, {
+    const transition = Animated.timing(progress, {
       toValue: 1,
       duration: 420,
       easing: Easing.out(Easing.cubic),
       useNativeDriver: true,
-    }).start();
-  }, [progress, screen]);
+    });
+    transition.start();
+    return () => transition.stop();
+  }, [desktop, progress, screen]);
 
   return (
     <Animated.View
-      style={{
+      style={desktop ? styles.desktopScene : {
         flex: 1,
         opacity: progress,
         transform: [{ translateY: progress.interpolate({ inputRange: [0, 1], outputRange: [10, 0] }) }],
@@ -81,6 +86,7 @@ function Scene({ screen, children }: { screen: Screen; children: React.ReactNode
 
 function AppShell() {
   const store = useParallel();
+  const desktop = useDesktopWeb();
   const [fontsLoaded, fontError] = useFonts({
     UnboundedLight: require('./assets/fonts/UnboundedLight.ttf'),
     Unbounded: require('./assets/fonts/Unbounded.ttf'),
@@ -138,7 +144,15 @@ function AppShell() {
   return (
     <View style={{ flex: 1, backgroundColor: palette.ink }}>
       <StatusBar barStyle="light-content" />
-      <Scene screen={store.screen}>{screen}</Scene>
+      <View style={desktop ? styles.desktopFrame : styles.body}>
+        {desktop ? (
+          <BottomNav sidebar active={store.tab} onChange={(tab) => {
+            if (store.screen === 'forge') store.back();
+            store.go(tab);
+          }} />
+        ) : null}
+        <Scene screen={store.screen} desktop={desktop}>{screen}</Scene>
+      </View>
       <Onboarding />
     </View>
   );
@@ -153,6 +167,9 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
+  body: { flex: 1 },
+  desktopFrame: { flex: 1, flexDirection: 'row', width: '100%', maxWidth: 1290, alignSelf: 'center' },
+  desktopScene: { flex: 1, minWidth: 0, overflow: 'hidden' },
   boot: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16 },
   bootTitle: {
     fontFamily: font.displayBook,

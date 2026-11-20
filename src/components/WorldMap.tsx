@@ -43,7 +43,7 @@ export function WorldMap({ locations, accent = 'violet', activeId, onSelect, hei
   const cx = width / 2;
   const cy = height * 0.46;
   return (
-    <View style={{ width, height }}>
+    <View style={{ width, height, alignSelf: 'center' }}>
       <Svg width={width} height={height} style={StyleSheet.absoluteFill}>
         <Defs>
           <RadialGradient id="map-glow" cx="50%" cy="50%" r="50%">

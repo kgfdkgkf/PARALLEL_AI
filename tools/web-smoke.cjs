@@ -117,6 +117,7 @@ async function main() {
     await page.goto(origin, { waitUntil: 'networkidle0' });
     await button(page, 'Пропустить');
     await button(page, 'Профиль');
+    await button(page, 'Локальный движок');
     await page.locator('input[aria-label="Адрес сервера иллюстраций"]').fill(origin);
     await button(page, 'Создать');
     await page.locator('textarea').fill('Что, если бы дождь шёл по расписанию?');
@@ -195,8 +196,27 @@ async function main() {
       await button(page, 'ВМЕШАТЬСЯ В ИСТОРИЮ');
       await see(page, 'Смена 2: трещина в графике');
     }
+
+    await page.setViewport({ width: 1440, height: 900 });
+    await button(page, 'Профиль');
+    await button(page, 'Локальный движок');
+    await button(page, 'Создать');
+    await see(page, 'Ctrl + Enter');
+    const layout = await page.evaluate(() => {
+      const nav = document.querySelector('[role=navigation], nav').getBoundingClientRect();
+      const input = document.querySelector('textarea').getBoundingClientRect();
+      const sample = [...document.querySelectorAll('[role=button]')].find((el) => el.innerText.includes('время можно было покупать'));
+      return { navRight: nav.right, inputLeft: input.left, inputRight: input.right, sampleLeft: sample.getBoundingClientRect().left };
+    });
+    assert.ok(layout.navRight < layout.inputLeft && layout.inputRight < layout.sampleLeft, 'Desktop navigation and suggestions should flank the composer');
+    await page.locator('textarea').fill('Что, если бы рассвет зависел от температуры?');
+    await page.keyboard.down('Control');
+    await page.keyboard.press('Enter');
+    await page.keyboard.up('Control');
+    await see(page, 'рассвет зависел от температуры');
+    await page.waitForFunction(() => JSON.parse(localStorage.getItem('parallel.archive.v2')).archive[0].question.includes('рассвет'));
     assert.deepEqual(pageErrors, []);
-    console.log('Web smoke passed: creation, map, narration, illustrations, diary, god, fork and saved archive.');
+    console.log('Web smoke passed on mobile and desktop, including the desktop creation shortcut.');
   } finally {
     await browser?.close();
     await new Promise((resolve) => server.close(resolve));

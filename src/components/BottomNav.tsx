@@ -4,6 +4,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { accents, type AccentKey, font, palette, radius } from '../theme';
 import { Icon, type IconName } from './Icon';
 import { PressableScale } from './ui';
+import { BrandMark } from './Cover';
+import { useDesktopWeb } from './useDesktopWeb';
 
 export type NavTab = 'home' | 'create' | 'archive' | 'profile';
 
@@ -14,19 +16,31 @@ const ITEMS: { id: NavTab; icon: IconName; label: string }[] = [
   { id: 'profile', icon: 'profile', label: 'Профиль' },
 ];
 
-export function BottomNav({ active, onChange }: { active: NavTab; onChange: (tab: NavTab) => void }) {
+export function BottomNav({ active, onChange, sidebar = false }: {
+  active: NavTab;
+  onChange: (tab: NavTab) => void;
+  sidebar?: boolean;
+}) {
   const insets = useSafeAreaInsets();
+  const desktop = useDesktopWeb();
+  if (desktop !== sidebar) return null;
   return (
-    <View style={[styles.wrap, { paddingBottom: Math.max(insets.bottom, 10) }]}>
-      <View style={styles.bar}>
+    <View style={sidebar ? styles.sidebar : [styles.wrap, { paddingBottom: Math.max(insets.bottom, 10) }]} accessibilityRole="navigation">
+      {sidebar ? (
+        <View style={styles.brand}>
+          <BrandMark size={32} />
+          <Text style={styles.brandText}>ПАРАЛЛЕЛЬ</Text>
+        </View>
+      ) : null}
+      <View style={sidebar ? styles.sidebarLinks : styles.bar}>
         {ITEMS.map((item) => {
           const selected = item.id === active;
           const accent: AccentKey = 'violet';
           const scheme = accents[accent];
           return (
-            <View key={item.id} style={{ flex: 1 }}>
-              <PressableScale onPress={() => onChange(item.id)}>
-                <View style={styles.item}>
+            <View key={item.id} style={sidebar ? undefined : styles.mobileSlot}>
+              <PressableScale label={item.label} selected={selected} onPress={() => onChange(item.id)}>
+                <View style={sidebar ? [styles.sidebarItem, selected && styles.sidebarSelected] : styles.item}>
                   <Icon
                     name={item.icon}
                     size={21}
@@ -35,12 +49,12 @@ export function BottomNav({ active, onChange }: { active: NavTab; onChange: (tab
                     filled={selected && item.icon === 'spark'}
                   />
                   <Text style={[styles.label, selected && { color: palette.text }]}>{item.label}</Text>
-                  <View
+                  {!sidebar ? <View
                     style={[
                       styles.dot,
                       { backgroundColor: selected ? scheme.core : 'transparent' },
                     ]}
-                  />
+                  /> : null}
                 </View>
               </PressableScale>
             </View>
@@ -52,6 +66,19 @@ export function BottomNav({ active, onChange }: { active: NavTab; onChange: (tab
 }
 
 const styles = StyleSheet.create({
+  sidebar: {
+    width: 206, padding: 18, gap: 36, backgroundColor: '#0B0A18',
+    borderRightWidth: StyleSheet.hairlineWidth, borderRightColor: palette.line,
+  },
+  brand: { flexDirection: 'row', alignItems: 'center', gap: 9, marginTop: 13 },
+  brandText: { color: palette.text, fontFamily: font.display, fontSize: 12, letterSpacing: 1 },
+  sidebarLinks: { gap: 8 },
+  sidebarItem: {
+    flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 48,
+    paddingHorizontal: 12, borderRadius: radius.md,
+  },
+  sidebarSelected: { backgroundColor: 'rgba(155,124,255,0.16)' },
+  mobileSlot: { flex: 1 },
   wrap: {
     position: 'absolute',
     left: 0,

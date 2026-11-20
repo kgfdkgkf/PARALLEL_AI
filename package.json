@@ -9,6 +9,7 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "build:web": "expo export --platform web --output-dir dist",
+    "preview:web": "node tools/preview-web.cjs",
     "mock:ai": "python tools/mock_api.py",
     "typecheck": "node tools/ensure-env.js && tsc --noEmit",
     "test": "node --test tools/engine.test.cjs",

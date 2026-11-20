@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Atmosphere } from '../components/Atmosphere';
 import { BottomNav } from '../components/BottomNav';
+import { useDesktopWeb } from '../components/useDesktopWeb';
 import { BrandMark, CoverCaption } from '../components/Cover';
 import { Icon } from '../components/Icon';
 import { MetricChips, describeMetrics } from '../components/Metrics';
@@ -37,11 +38,16 @@ const PROMPTS = [
 
 export function HomeScreen({ store }: { store: ParallelStore }) {
   const { width } = useWindowDimensions();
+  const desktop = useDesktopWeb();
   const featured = useMemo(() => createUniverse('Что, если бы люди никогда не умели лгать?'), []);
   const entrance = useRef(new Animated.Value(0)).current;
   const drift = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
+    if (desktop) {
+      entrance.setValue(1);
+      return;
+    }
     Animated.timing(entrance, { toValue: 1, duration: 1400, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start();
     const loop = Animated.loop(
       Animated.sequence([
@@ -51,7 +57,7 @@ export function HomeScreen({ store }: { store: ParallelStore }) {
     );
     loop.start();
     return () => loop.stop();
-  }, [drift, entrance]);
+  }, [desktop, drift, entrance]);
 
   const scheme = accents.violet;
   const lastWorld = store.archive[0];
@@ -88,7 +94,7 @@ export function HomeScreen({ store }: { store: ParallelStore }) {
     <View style={{ flex: 1 }}>
       <Atmosphere accent="violet" starCount={70} />
       <SafeAreaView style={{ flex: 1 }} edges={['top']}>
-        <ScrollView contentContainerStyle={{ paddingBottom: 132 }} showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={{ paddingBottom: desktop ? 36 : 132 }} showsVerticalScrollIndicator={desktop}>
           <View style={{ height: 420, marginTop: 4 }}>
             <Animated.View
               style={[

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef } from 'react';
-import { Animated, Easing, Image, StyleSheet, View } from 'react-native';
+import { Animated, Easing, Image, Platform, StyleSheet, View } from 'react-native';
 import Svg, { Circle, Defs, RadialGradient, Rect, Stop } from 'react-native-svg';
 import { accents, type AccentKey, fillImage, grain, palette } from '../theme';
 import { mulberry32 } from '../engine/hash';
@@ -19,7 +19,7 @@ function Stars({ count, color }: { count: number; color: string }) {
       top: `${(random() * 100).toFixed(2)}%`,
       size: random() > 0.92 ? 2.6 : random() > 0.7 ? 1.8 : 1.1,
       opacity: 0.18 + random() * 0.55,
-      bright: index % 11 === 0,
+      bright: Platform.OS !== 'web' && index % 11 === 0,
     }));
   }, [count]);
 
@@ -90,7 +90,7 @@ function Stars({ count, color }: { count: number; color: string }) {
   );
 }
 
-export function Atmosphere({ accent = 'violet', intensity = 'deep', starCount = 54, children }: Props) {
+export const Atmosphere = React.memo(function Atmosphere({ accent = 'violet', intensity = 'deep', starCount = 54, children }: Props) {
   const scheme = accents[accent];
   const base = intensity === 'flat' ? palette.ink2 : palette.void;
   const strength = intensity === 'deep' ? 1 : intensity === 'soft' ? 0.62 : 0.24;
@@ -126,7 +126,7 @@ export function Atmosphere({ accent = 'violet', intensity = 'deep', starCount = 
       {children}
     </View>
   );
-}
+});
 
 /** Медленно дышащий ореол за крупными элементами. */
 export function Halo({

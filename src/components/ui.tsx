@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import {
   Animated,
   Easing,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -29,6 +30,7 @@ export function Reveal({
   const progress = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
+    if (Platform.OS === 'web') return;
     const animation = Animated.timing(progress, {
       toValue: 1,
       duration: 620,
@@ -39,6 +41,8 @@ export function Reveal({
     animation.start();
     return () => animation.stop();
   }, [delay, progress]);
+
+  if (Platform.OS === 'web') return <View style={style}>{children}</View>;
 
   return (
     <Animated.View
@@ -63,6 +67,7 @@ export function PressableScale({
   style,
   hitSlop,
   label,
+  selected,
 }: {
   children: React.ReactNode;
   onPress?: () => void;
@@ -71,6 +76,7 @@ export function PressableScale({
   style?: StyleProp<ViewStyle>;
   hitSlop?: number;
   label?: string;
+  selected?: boolean;
 }) {
   const scale = useRef(new Animated.Value(1)).current;
   const to = (value: number) =>
@@ -84,6 +90,7 @@ export function PressableScale({
       hitSlop={hitSlop}
       accessibilityRole="button"
       accessibilityLabel={label}
+      accessibilityState={selected === undefined ? undefined : { selected, disabled }}
       onPressIn={() => to(0.97)}
       onPressOut={() => to(1)}
     >
