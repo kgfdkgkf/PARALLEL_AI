@@ -2,7 +2,7 @@
   "expo": {
     "name": "ПАРАЛЛЕЛЬ",
     "slug": "parallel-universe",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "orientation": "portrait",
     "newArchEnabled": true,
     "userInterfaceStyle": "dark",
@@ -15,11 +15,11 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "ru.parallel.universe",
-      "buildNumber": "3"
+      "buildNumber": "4"
     },
     "android": {
       "package": "ru.parallel.universe",
-      "versionCode": 3,
+      "versionCode": 4,
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#05050C"
