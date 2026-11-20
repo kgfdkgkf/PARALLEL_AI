@@ -19,9 +19,10 @@ function readKey(file) {
 
 const commands = {
   start: ['start', '--web', '--localhost'],
+  mobile: ['start', '--go'],
   build: ['export', '--platform', 'web', '--output-dir', 'dist'],
 };
-if (!Object.hasOwn(commands, command)) throw new Error('Use npm run web or npm run build:web.');
+if (!Object.hasOwn(commands, command)) throw new Error('Use npm run web, npm run mobile or npm run build:web.');
 
 const env = { ...process.env };
 const userSettings = process.platform === 'win32'
@@ -37,6 +38,13 @@ if (!Object.hasOwn(env, variable)) {
 }
 if (!env[variable]?.trim()) {
   console.log('Ключ Groq не найден в локальных настройках. Доступен DEMO CORE.');
+}
+
+if (command === 'start') {
+  env.EXPO_NO_QR_CODE = '1';
+  console.log('Запуск для браузера на этом компьютере. Для телефона с Expo Go используй npm run mobile.');
+} else if (command === 'mobile') {
+  console.log('Expo Go · подключи телефон и компьютер к одной локальной сети и отсканируй QR ниже.');
 }
 
 const expo = spawn(process.execPath, [require.resolve('expo/bin/cli'), ...commands[command], ...args], {
