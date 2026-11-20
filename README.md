@@ -69,6 +69,7 @@
 Установите Node.js 24. Команды ниже запускают проект в Windows.
 
 ```powershell
+cd "папка проекта"
 npm.cmd ci
 npm.cmd run web
 ```
